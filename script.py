@@ -15,14 +15,42 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
 
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
-    mapping = {
-        "INFOSYS": "INFY.NS",
-        "TCS": "TCS.NS",
-        "HDFC BANK": "HDFCBANK.NS",
-        "ICICI BANK": "ICICIBANK.NS",
-        "RELIANCE": "RELIANCE.NS",
-        "SBIN": "SBIN.NS",
-        "ITC": "ITC.NS"
+    mmapping = {
+    "ANGELONE": "ANGELONE.NS",
+    "ASIANPAINT": "ASIANPAINT.NS",
+    "BAJAJFINANCE": "BAJFINANCE.NS",
+    "COALINDIA": "COALINDIA.NS",
+    "DIVISLAB": "DIVISLAB.NS",
+    "DIXON": "DIXON.NS",
+    "EPIGRAL": "EPIGRAL.NS",
+    "FCL": "FCL.NS",  # Fineotex Chemical
+    "GAIL": "GAIL.NS",
+    "HDFC BANK": "HDFCBANK.NS",
+    "ICICI BANK": "ICICIBANK.NS",
+    "INFOSYS": "INFY.NS",
+    "ITC": "ITC.NS",
+    "KIRLOSENG": "KIRLOSENG.NS",
+    "KOTAKBANK": "KOTAKBANK.NS",
+    "LAURUSLABS": "LAURUSLABS.NS",
+    "MANKIND": "MANKIND.NS",
+    "MARICO": "MARICO.NS",
+    "NTPC": "NTPC.NS",
+    "PETRONET": "PETRONET.NS",
+    "PFC": "PFC.NS",
+    "PIIND": "PIIND.NS",
+    "POLYCAB": "POLYCAB.NS",
+    "POONAWALLA": "POONAWALLA.NS",
+    "RELIANCE": "RELIANCE.NS",
+    "SBIN": "SBIN.NS",
+    "STYLAMIND": "STYLAMIND.NS",
+    "TCS": "TCS.NS",
+    "TRIVENI": "TRIVENI.NS",
+    "VBL": "VBL.NS",
+    "ZENTEC": "ZENTEC.NS",
+
+    # --- Special cases / corrections ---
+    "TMCV": "TATAMOTORS.NS",  # assuming Tata Motors (CV not separately listed)
+}
     }
 
     ticker = mapping.get(stock)
