@@ -1,9 +1,10 @@
 import feedparser
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import random
 import os
 
-STOCKS = ["Infosys", "HDFC+Bank", "TCS", "ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDBFS", "ICICI+BANK", "ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
+STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDFC+BANK", "HDBFS", "ICICI+BANK", "INFOSYS","ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
 def fetch_news(stock):
     url = f"https://news.google.com/rss/search?q={stock}+stock&hl=en-IN&gl=IN&ceid=IN:en"
@@ -19,12 +20,14 @@ def fetch_news(stock):
 
 def format_time(entry):
     try:
-        return entry.published
-    except AttributeError:
+        dt = datetime(*entry.published_parsed[:6])
+        ist = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
+        return ist.strftime('%d %b %Y, %I:%M %p IST')
+    except:
         return "No date"
 
 def generate_html(all_news):
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S IST')
 
     html = f"""
     <html>
