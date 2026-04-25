@@ -47,9 +47,8 @@ def get_stock_data(stock):
     "TRIVENI": "TRIVENI.NS",
     "VBL": "VBL.NS",
     "ZENTEC": "ZENTEC.NS",
-
-    # --- Special cases / corrections ---
-    "TMCV": "TATAMOTORS.NS",  # assuming Tata Motors (CV not separately listed)
+    "TMCV": "TMCV.NS", 
+     "TMPV": "TMPV.NS", 
 }
 
     ticker = mapping.get(stock)
