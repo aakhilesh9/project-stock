@@ -3,30 +3,79 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import random
 import os
+from urllib.parse import quote_plus
+import yfinance as yf
 
-STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDFC+BANK", "HDBFS", "ICICI+BANK", "INFOSYS","ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
+STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDFC BANK", "HDBFS", "ICICI BANK", "INFOSYS","ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
+# ----------- PRICE FETCH -----------
+def get_stock_data(stock):
+    mapping = {
+        "INFOSYS": "INFY.NS",
+        "TCS": "TCS.NS",
+        "HDFC BANK": "HDFCBANK.NS",
+        "ICICI BANK": "ICICIBANK.NS",
+        "RELIANCE": "RELIANCE.NS",
+        "SBIN": "SBIN.NS",
+        "ITC": "ITC.NS",
+        "KOTAKBANK": "KOTAKBANK.NS",
+        "BAJAJFINANCE": "BAJFINANCE.NS",
+        "ASIANPAINT": "ASIANPAINT.NS",
+        "NTPC": "NTPC.NS",
+        "COALINDIA": "COALINDIA.NS",
+        "DIVISLAB": "DIVISLAB.NS",
+        "MARICO": "MARICO.NS",
+        "PFC": "PFC.NS",
+        "PIIND": "PIIND.NS",
+        "POLYCAB": "POLYCAB.NS",
+        "VBL": "VBL.NS"
+    }
+
+    ticker = mapping.get(stock)
+    if not ticker:
+        return None
+
+    try:
+        data = yf.Ticker(ticker)
+        hist = data.history(period="1d")
+
+        if hist.empty:
+            return None
+
+        close = hist["Close"].iloc[-1]
+        open_ = hist["Open"].iloc[-1]
+        change = ((close - open_) / open_) * 100
+
+        return round(close, 2), round(change, 2)
+
+    except Exception as e:
+        print(f"[ERROR] {stock}: {e}")
+        return None
+
+
+# ----------- NEWS FETCH -----------
 def fetch_news(stock):
-    url = f"https://news.google.com/rss/search?q={stock}+stock&hl=en-IN&gl=IN&ceid=IN:en"
-    feed = feedparser.parse(url)
+    query = quote_plus(f"{stock} stock")
+    url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
+    feed = feedparser.parse(url)
     entries = feed.entries
 
     if not entries:
-        print(f"[WARN] No news found for {stock}")
         return []
 
     return entries[:5]
 
+
 def format_time(entry):
     try:
-        dt = datetime(*entry.published_parsed[:6])
-        ist = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
-        return ist.strftime('%d %b %Y, %I:%M %p IST')
-    except:
+        return entry.published
+    except AttributeError:
         return "No date"
 
-def generate_html(all_news):
+
+# ----------- HTML -----------
+def generate_html(all_data):
     now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S IST')
 
     html = f"""
@@ -66,9 +115,15 @@ def generate_html(all_news):
                 margin-bottom: 40px;
             }}
 
-            .stock h2 {{
-                margin-bottom: 15px;
-                color: #38bdf8;
+            .stock-header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }}
+
+            .price {{
+                font-weight: bold;
+                font-size: 16px;
             }}
 
             .grid {{
@@ -98,16 +153,8 @@ def generate_html(all_news):
                 margin-bottom: 8px;
             }}
 
-            .card a:hover {{
-                color: #38bdf8;
-            }}
-
             .time {{
                 font-size: 12px;
-                color: #94a3b8;
-            }}
-
-            .empty {{
                 color: #94a3b8;
             }}
         </style>
@@ -119,61 +166,68 @@ def generate_html(all_news):
             <div class="updated">Last updated: {now}</div>
     """
 
-    for stock, articles in all_news.items():
+    for stock, data in all_data.items():
+        articles = data["news"]
+        price_data = data["price"]
+
+        if price_data:
+            price, change = price_data
+            color = "#22c55e" if change >= 0 else "#ef4444"
+            price_html = f'<div class="price" style="color:{color}">₹{price} ({change}%)</div>'
+        else:
+            price_html = '<div class="price">N/A</div>'
+
         html += f"""
         <div class="stock">
-            <h2>{stock}</h2>
+            <div class="stock-header">
+                <h2>{stock}</h2>
+                {price_html}
+            </div>
             <div class="grid">
         """
 
         if not articles:
-            html += '<div class="empty">No news found</div>'
+            html += '<div>No news found</div>'
         else:
             for a in articles:
-                title = a.title
-                link = a.link
-                published = format_time(a)
-
                 html += f"""
                 <div class="card">
-                    <a href="{link}" target="_blank">{title}</a>
-                    <div class="time">{published}</div>
+                    <a href="{a.link}" target="_blank">{a.title}</a>
+                    <div class="time">{format_time(a)}</div>
                 </div>
                 """
 
         html += "</div></div>"
 
-    html += """
-        </div>
-    </body>
-    </html>
-    """
-
+    html += "</div></body></html>"
     return html
 
 
+# ----------- MAIN -----------
 def main():
     print("=== Script Started ===")
 
-    all_news = {}
+    all_data = {}
 
     for stock in STOCKS:
-        print(f"Fetching news for {stock}...")
+        print(f"Fetching {stock}...")
         news = fetch_news(stock)
-        print(f"{stock}: {len(news)} articles fetched")
-        all_news[stock] = news
+        price = get_stock_data(stock)
 
-    print("Generating HTML...")
-    html = generate_html(all_news)
+        all_data[stock] = {
+            "news": news,
+            "price": price
+        }
 
-    # NEW: Create a dedicated public folder for the website
+    html = generate_html(all_data)
+
     os.makedirs("public", exist_ok=True)
 
-    # NEW: Write the HTML file into the public folder
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
     print("public/index.html written successfully")
+
 
 if __name__ == "__main__":
     main()
