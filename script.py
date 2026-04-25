@@ -21,7 +21,6 @@ def get_stock_data(stock):
         "ITC": "ITC.NS",
         "KOTAKBANK": "KOTAKBANK.NS",
         "BAJAJFINANCE": "BAJFINANCE.NS",
-        "ASIANPAINT": "ASIANPAINT.NS",
         "NTPC": "NTPC.NS",
         "COALINDIA": "COALINDIA.NS",
         "DIVISLAB": "DIVISLAB.NS",
