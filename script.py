@@ -4,15 +4,14 @@ from zoneinfo import ZoneInfo
 from urllib.parse import quote_plus
 import os
 
-STOCKS = [
-    "ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
-    "DIXON", "EPIGRAL", "FCL", "GAIL", "HDFC BANK", "HDBFS",
-    "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
-    "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
-    "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
-    "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
-    "TMPV", "TRIVENI", "VBL", "ZENTEC"
-]
+STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
+          "DIXON", "EPIGRAL", "FCL", "GAIL", "HDFC BANK", "HDBFS",
+          "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
+          "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
+          "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
+          "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
+          "TMPV", "TRIVENI", "VBL", "ZENTEC"]
+
 
 # ----------- NEWS FETCH -----------
 def fetch_news(stock):
@@ -20,19 +19,11 @@ def fetch_news(stock):
     url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
     feed = feedparser.parse(url)
-    entries = feed.entries
-
-    if not entries:
-        return []
-
-    return entries[:5]
+    return feed.entries[:5] if feed.entries else []
 
 
 def format_time(entry):
-    try:
-        return entry.published
-    except AttributeError:
-        return "No date"
+    return getattr(entry, "published", "No date")
 
 
 # ----------- HTML -----------
@@ -64,11 +55,10 @@ def generate_html(all_news):
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, sans-serif;
             margin: 0;
             background: var(--bg);
             color: var(--text);
-            transition: 0.3s ease;
         }}
 
         .container {{
@@ -77,13 +67,8 @@ def generate_html(all_news):
             padding: 20px;
         }}
 
-        h1 {{
-            text-align: center;
-        }}
-
         .toggle {{
             text-align: right;
-            margin-bottom: 10px;
         }}
 
         button {{
@@ -98,12 +83,7 @@ def generate_html(all_news):
         .updated {{
             text-align: center;
             color: var(--muted);
-            font-size: 14px;
-            margin-bottom: 25px;
-        }}
-
-        .stock {{
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }}
 
         .grid {{
@@ -116,27 +96,16 @@ def generate_html(all_news):
             background: var(--card);
             padding: 15px;
             border-radius: 12px;
-            transition: 0.2s ease;
-        }}
-
-        .card:hover {{
-            transform: translateY(-4px);
         }}
 
         .card a {{
             color: var(--text);
             text-decoration: none;
-            font-weight: 500;
-        }}
-
-        .card a:hover {{
-            color: var(--accent);
         }}
 
         .time {{
             font-size: 12px;
             color: var(--muted);
-            margin-top: 6px;
         }}
         </style>
     </head>
@@ -154,9 +123,8 @@ def generate_html(all_news):
 
     for stock, articles in all_news.items():
         html += f"""
-        <div class="stock">
-            <h2>{stock}</h2>
-            <div class="grid">
+        <h2>{stock}</h2>
+        <div class="grid">
         """
 
         if not articles:
@@ -170,8 +138,9 @@ def generate_html(all_news):
                 </div>
                 """
 
-        html += "</div></div>"
+        html += "</div>"
 
+    # ✅ FIXED: script is inside string
     html += """
         </div>
 
@@ -206,8 +175,7 @@ def main():
 
     for stock in STOCKS:
         print(f"Fetching {stock}...")
-        news = fetch_news(stock)
-        all_news[stock] = news
+        all_news[stock] = fetch_news(stock)
 
     html = generate_html(all_news)
 
