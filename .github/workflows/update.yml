@@ -1,0 +1,33 @@
+name: Update Stock News
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run script
+        run: python script.py
+
+      - name: Commit updated file
+        run: |
+          git config --global user.name "bot"
+          git config --global user.email "bot@example.com"
+          git add index.html
+          git commit -m "Update news" || echo "No changes"
+          git push
