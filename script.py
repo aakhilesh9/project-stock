@@ -29,53 +29,102 @@ def generate_html(all_news):
     html = f"""
     <html>
     <head>
-        <title>Stock News Dashboard</title>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Stock News Dashboard</title>
+
         <style>
             body {{
-                font-family: Arial, sans-serif;
-                margin: 20px;
-                background: #f5f5f5;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                margin: 0;
+                background: #0f172a;
+                color: #e2e8f0;
             }}
+
+            .container {{
+                max-width: 1100px;
+                margin: auto;
+                padding: 20px;
+            }}
+
             h1 {{
-                color: #333;
+                text-align: center;
+                margin-bottom: 5px;
             }}
-            h2 {{
-                color: #444;
-                margin-top: 30px;
+
+            .updated {{
+                text-align: center;
+                color: #94a3b8;
+                font-size: 14px;
+                margin-bottom: 30px;
             }}
-            ul {{
-                background: white;
+
+            .stock {{
+                margin-bottom: 40px;
+            }}
+
+            .stock h2 {{
+                margin-bottom: 15px;
+                color: #38bdf8;
+            }}
+
+            .grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 15px;
+            }}
+
+            .card {{
+                background: #1e293b;
                 padding: 15px;
-                border-radius: 8px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                border-radius: 12px;
+                transition: 0.2s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             }}
-            li {{
-                margin-bottom: 10px;
+
+            .card:hover {{
+                transform: translateY(-4px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.5);
             }}
-            a {{
+
+            .card a {{
+                color: #e2e8f0;
                 text-decoration: none;
-                color: #1a0dab;
+                font-weight: 500;
+                display: block;
+                margin-bottom: 8px;
             }}
-            a:hover {{
-                text-decoration: underline;
+
+            .card a:hover {{
+                color: #38bdf8;
             }}
+
             .time {{
-                color: gray;
                 font-size: 12px;
+                color: #94a3b8;
+            }}
+
+            .empty {{
+                color: #94a3b8;
             }}
         </style>
     </head>
+
     <body>
-        <h1>Stock News Dashboard</h1>
-        <p><b>Last updated:</b> {now}</p>
+        <div class="container">
+            <h1>📈 Stock News Dashboard</h1>
+            <div class="updated">Last updated: {now}</div>
     """
 
     for stock, articles in all_news.items():
-        html += f"<h2>{stock}</h2><ul>"
+        html += f"""
+        <div class="stock">
+            <h2>{stock}</h2>
+            <div class="grid">
+        """
 
         if not articles:
-            html += "<li>No news found</li>"
+            html += '<div class="empty">No news found</div>'
         else:
             for a in articles:
                 title = a.title
@@ -83,15 +132,19 @@ def generate_html(all_news):
                 published = format_time(a)
 
                 html += f"""
-                <li>
-                    <a href="{link}" target="_blank">{title}</a><br>
-                    <span class="time">{published}</span>
-                </li>
+                <div class="card">
+                    <a href="{link}" target="_blank">{title}</a>
+                    <div class="time">{published}</div>
+                </div>
                 """
 
-        html += "</ul>"
+        html += "</div></div>"
 
-    html += "</body></html>"
+    html += """
+        </div>
+    </body>
+    </html>
+    """
 
     return html
 
