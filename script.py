@@ -88,83 +88,110 @@ def generate_html(all_data):
         <title>Stock News Dashboard</title>
 
         <style>
-            body {{
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                margin: 0;
-                background: #0f172a;
-                color: #e2e8f0;
-            }}
+:root {
+    --bg: #0f172a;
+    --text: #e2e8f0;
+    --card: #1e293b;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+}
 
-            .container {{
-                max-width: 1100px;
-                margin: auto;
-                padding: 20px;
-            }}
+body.light {
+    --bg: #f5f5f5;
+    --text: #1e293b;
+    --card: #ffffff;
+    --muted: #555;
+    --accent: #2563eb;
+}
 
-            h1 {{
-                text-align: center;
-                margin-bottom: 5px;
-            }}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    transition: 0.3s ease;
+}
 
-            .updated {{
-                text-align: center;
-                color: #94a3b8;
-                font-size: 14px;
-                margin-bottom: 30px;
-            }}
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
 
-            .stock {{
-                margin-bottom: 40px;
-            }}
+h1 {
+    text-align: center;
+}
 
-            .stock-header {{
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }}
+.updated {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
 
-            .price {{
-                font-weight: bold;
-                font-size: 16px;
-            }}
+.toggle {
+    text-align: right;
+    margin-bottom: 10px;
+}
 
-            .grid {{
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 15px;
-            }}
+button {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
 
-            .card {{
-                background: #1e293b;
-                padding: 15px;
-                border-radius: 12px;
-                transition: 0.2s ease;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            }}
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-            .card:hover {{
-                transform: translateY(-4px);
-                box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-            }}
+.price {
+    font-weight: bold;
+}
 
-            .card a {{
-                color: #e2e8f0;
-                text-decoration: none;
-                font-weight: 500;
-                display: block;
-                margin-bottom: 8px;
-            }}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+}
 
-            .time {{
-                font-size: 12px;
-                color: #94a3b8;
-            }}
-        </style>
+.card {
+    background: var(--card);
+    padding: 15px;
+    border-radius: 12px;
+    transition: 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.card a:hover {
+    color: var(--accent);
+}
+
+.time {
+    font-size: 12px;
+    color: var(--muted);
+}
+</style>
     </head>
 
     <body>
         <div class="container">
             <h1>📈 Stock News Dashboard</h1>
+                  <div class="toggle">
+               <button onclick="toggleTheme()">Toggle Theme</button>
+            </div>
             <div class="updated">Last updated: {now}</div>
     """
 
@@ -200,7 +227,20 @@ def generate_html(all_data):
                 """
 
         html += "</div></div>"
+<script>
+function toggleTheme() {
+    document.body.classList.toggle("light");
+    localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+}
 
+// Load saved theme
+window.onload = function() {
+    const saved = localStorage.getItem("theme");
+    if (saved === "light") {
+        document.body.classList.add("light");
+    }
+}
+</script>
     html += "</div></body></html>"
     return html
 
