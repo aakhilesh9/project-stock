@@ -1,12 +1,18 @@
 import feedparser
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import random
-import os
 from urllib.parse import quote_plus
-import yfinance as yf
+import os
 
-STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDFC BANK", "HDBFS", "ICICI BANK", "INFOSYS","ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
+STOCKS = [
+    "ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
+    "DIXON", "EPIGRAL", "FCL", "GAIL", "HDFC BANK", "HDBFS",
+    "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
+    "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
+    "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
+    "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
+    "TMPV", "TRIVENI", "VBL", "ZENTEC"
+]
 
 # ----------- NEWS FETCH -----------
 def fetch_news(stock):
@@ -30,7 +36,7 @@ def format_time(entry):
 
 
 # ----------- HTML -----------
-def generate_html(all_data):
+def generate_html(all_news):
     now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S IST')
 
     html = f"""
@@ -41,135 +47,120 @@ def generate_html(all_data):
         <title>Stock News Dashboard</title>
 
         <style>
-:root {
-    --bg: #0f172a;
-    --text: #e2e8f0;
-    --card: #1e293b;
-    --muted: #94a3b8;
-    --accent: #38bdf8;
-}
+        :root {{
+            --bg: #0f172a;
+            --text: #e2e8f0;
+            --card: #1e293b;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+        }}
 
-body.light {
-    --bg: #f5f5f5;
-    --text: #1e293b;
-    --card: #ffffff;
-    --muted: #555;
-    --accent: #2563eb;
-}
+        body.light {{
+            --bg: #f5f5f5;
+            --text: #1e293b;
+            --card: #ffffff;
+            --muted: #555;
+            --accent: #2563eb;
+        }}
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    transition: 0.3s ease;
-}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            transition: 0.3s ease;
+        }}
 
-.container {
-    max-width: 1100px;
-    margin: auto;
-    padding: 20px;
-}
+        .container {{
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px;
+        }}
 
-h1 {
-    text-align: center;
-}
+        h1 {{
+            text-align: center;
+        }}
 
-.updated {
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-    margin-bottom: 20px;
-}
+        .toggle {{
+            text-align: right;
+            margin-bottom: 10px;
+        }}
 
-.toggle {
-    text-align: right;
-    margin-bottom: 10px;
-}
+        button {{
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--muted);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }}
 
-button {
-    background: var(--card);
-    color: var(--text);
-    border: 1px solid var(--muted);
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-}
+        .updated {{
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }}
 
-.stock-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        .stock {{
+            margin-bottom: 40px;
+        }}
 
-.price {
-    font-weight: bold;
-}
+        .grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }}
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
-}
+        .card {{
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+            transition: 0.2s ease;
+        }}
 
-.card {
-    background: var(--card);
-    padding: 15px;
-    border-radius: 12px;
-    transition: 0.2s ease;
-}
+        .card:hover {{
+            transform: translateY(-4px);
+        }}
 
-.card:hover {
-    transform: translateY(-4px);
-}
+        .card a {{
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+        }}
 
-.card a {
-    color: var(--text);
-    text-decoration: none;
-}
+        .card a:hover {{
+            color: var(--accent);
+        }}
 
-.card a:hover {
-    color: var(--accent);
-}
-
-.time {
-    font-size: 12px;
-    color: var(--muted);
-}
-</style>
+        .time {{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }}
+        </style>
     </head>
 
     <body>
         <div class="container">
             <h1>📈 Stock News Dashboard</h1>
-                  <div class="toggle">
-               <button onclick="toggleTheme()">Toggle Theme</button>
+
+            <div class="toggle">
+                <button onclick="toggleTheme()">Toggle Theme</button>
             </div>
+
             <div class="updated">Last updated: {now}</div>
     """
 
-    for stock, data in all_data.items():
-        articles = data["news"]
-        price_data = data["price"]
-
-        if price_data:
-            price, change = price_data
-            color = "#22c55e" if change >= 0 else "#ef4444"
-            price_html = f'<div class="price" style="color:{color}">₹{price} ({change}%)</div>'
-        else:
-            price_html = '<div class="price">N/A</div>'
-
+    for stock, articles in all_news.items():
         html += f"""
         <div class="stock">
-            <div class="stock-header">
-                <h2>{stock}</h2>
-                {price_html}
-            </div>
+            <h2>{stock}</h2>
             <div class="grid">
         """
 
         if not articles:
-            html += '<div>No news found</div>'
+            html += "<div>No news found</div>"
         else:
             for a in articles:
                 html += f"""
@@ -180,21 +171,30 @@ button {
                 """
 
         html += "</div></div>"
-<script>
-function toggleTheme() {
-    document.body.classList.toggle("light");
-    localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
-}
 
-// Load saved theme
-window.onload = function() {
-    const saved = localStorage.getItem("theme");
-    if (saved === "light") {
-        document.body.classList.add("light");
-    }
-}
-</script>
-    html += "</div></body></html>"
+    html += """
+        </div>
+
+        <script>
+        function toggleTheme() {
+            document.body.classList.toggle("light");
+            localStorage.setItem("theme",
+                document.body.classList.contains("light") ? "light" : "dark"
+            );
+        }
+
+        window.onload = function() {
+            const saved = localStorage.getItem("theme");
+            if (saved === "light") {
+                document.body.classList.add("light");
+            }
+        }
+        </script>
+
+    </body>
+    </html>
+    """
+
     return html
 
 
@@ -202,19 +202,14 @@ window.onload = function() {
 def main():
     print("=== Script Started ===")
 
-    all_data = {}
+    all_news = {}
 
     for stock in STOCKS:
         print(f"Fetching {stock}...")
         news = fetch_news(stock)
-        price = get_stock_data(stock)
+        all_news[stock] = news
 
-        all_data[stock] = {
-            "news": news,
-            "price": price
-        }
-
-    html = generate_html(all_data)
+    html = generate_html(all_news)
 
     os.makedirs("public", exist_ok=True)
 
