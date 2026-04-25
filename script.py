@@ -3,7 +3,7 @@ from datetime import datetime
 import random
 import os
 
-STOCKS = ["Infosys", "HDFC+Bank", "TCS"]
+STOCKS = ["Infosys", "HDFC+Bank", "TCS", "ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDBFS", "ICICI+BANK", "ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
 def fetch_news(stock):
     url = f"https://news.google.com/rss/search?q={stock}+stock&hl=en-IN&gl=IN&ceid=IN:en"
@@ -15,7 +15,6 @@ def fetch_news(stock):
         print(f"[WARN] No news found for {stock}")
         return []
 
-    random.shuffle(entries)  # ensures visible change
     return entries[:5]
 
 def format_time(entry):
