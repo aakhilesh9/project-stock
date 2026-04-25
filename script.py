@@ -8,51 +8,6 @@ import yfinance as yf
 
 STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DIXON", "EPIGRAL","FCL", "GAIL", "HDFC BANK", "HDBFS", "ICICI BANK", "INFOSYS","ITC", "KIRLOSENG", "KOTAKBANK", "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET", "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE", "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV", "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
-# ----------- PRICE FETCH -----------
-def get_stock_data(stock):
-    mapping = {
-        "ANGELONE": "ANGELONE.NS"
-        "INFOSYS": "INFY.NS",
-        "TCS": "TCS.NS",
-        "HDFC BANK": "HDFCBANK.NS",
-        "ICICI BANK": "ICICIBANK.NS",
-        "RELIANCE": "RELIANCE.NS",
-        "SBIN": "SBIN.NS",
-        "ITC": "ITC.NS",
-        "KOTAKBANK": "KOTAKBANK.NS",
-        "BAJAJFINANCE": "BAJFINANCE.NS",
-        "NTPC": "NTPC.NS",
-        "COALINDIA": "COALINDIA.NS",
-        "DIVISLAB": "DIVISLAB.NS",
-        "MARICO": "MARICO.NS",
-        "PFC": "PFC.NS",
-        "PIIND": "PIIND.NS",
-        "POLYCAB": "POLYCAB.NS",
-        "VBL": "VBL.NS"
-    }
-
-    ticker = mapping.get(stock)
-    if not ticker:
-        return None
-
-    try:
-        data = yf.Ticker(ticker)
-        hist = data.history(period="1d")
-
-        if hist.empty:
-            return None
-
-        close = hist["Close"].iloc[-1]
-        open_ = hist["Open"].iloc[-1]
-        change = ((close - open_) / open_) * 100
-
-        return round(close, 2), round(change, 2)
-
-    except Exception as e:
-        print(f"[ERROR] {stock}: {e}")
-        return None
-
-
 # ----------- NEWS FETCH -----------
 def fetch_news(stock):
     query = quote_plus(f"{stock} stock")
