@@ -3,7 +3,7 @@ from datetime import datetime
 import random
 import os
 
-STOCKS = ["Infosys", "HDFC Bank", "TCS"]
+STOCKS = ["Infosys", "HDFC+Bank", "TCS"]
 
 def fetch_news(stock):
     url = f"https://news.google.com/rss/search?q={stock}+stock&hl=en-IN&gl=IN&ceid=IN:en"
