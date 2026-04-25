@@ -13,14 +13,6 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
           "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
-ALIASES = {
-    "INFOSYS": ["infosys", "infy"],
-    "HDFC BANK": ["hdfc bank", "hdfcbank"],
-    "RELIANCE": ["reliance", "ril"],
-    "ICICI BANK": ["icici bank", "icicibank"],
-    "SBIN": ["sbi", "state bank"],
-}
-
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
     mapping = {
@@ -95,42 +87,23 @@ def is_relevant(title):
 
     return True
 
-def get_feed_urls(stock):
-    q = quote_plus(f"{stock} stock")
-
-    return [
-        f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
-        "https://www.moneycontrol.com/rss/business.xml",
-        "https://www.livemint.com/rss/markets",
-        "https://feeds.reuters.com/reuters/businessNews"
-    ]
 
 # ----------- NEWS FETCH -----------
 
-def fetch_news(stock, mode="latest", max_items=5):
-    urls = get_feed_urls(stock)
+def fetch_news(stock, max_items=5, max_age_days=30):
+    query = quote_plus(f"{stock} stock")
+    url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
-    all_entries = []
-
-    # collect from all feeds
-    for url in urls:
-        feed = feedparser.parse(url)
-        all_entries.extend(feed.entries)
+    feed = feedparser.parse(url)
 
     seen = set()
     filtered = []
 
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
-    cutoff = now - timedelta(days=30 if mode == "latest" else 90)
+    cutoff = now - timedelta(days=max_age_days)
 
-    for entry in all_entries:
+    for entry in feed.entries:
         title = entry.title.strip()
-        title_lower = title.lower()
-
-        # ---- ALIAS FILTER ----
-        aliases = ALIASES.get(stock, [stock.lower()])
-        if not any(alias in title_lower for alias in aliases):
-            continue
 
         if title in seen:
             continue
@@ -138,22 +111,23 @@ def fetch_news(stock, mode="latest", max_items=5):
         if not is_relevant(title):
             continue
 
+        # ---- DATE FILTER ----
         published = getattr(entry, "published_parsed", None)
-        if not published:
-            continue
+        if published:
+            pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
 
-        pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
-
-        if pub_date < cutoff:
-            continue
+            if pub_date < cutoff:
+                continue  # skip old news
+        else:
+            continue  # skip if no date (optional strictness)
 
         seen.add(title)
-        filtered.append((pub_date, entry))
+        filtered.append(entry)
 
-    # sort latest first
-    filtered.sort(key=lambda x: x[0], reverse=True)
+        if len(filtered) == max_items:
+            break
 
-    return [entry for _, entry in filtered[:max_items]]
+    return filtered
 
 
 def format_time(entry):
