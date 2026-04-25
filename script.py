@@ -90,7 +90,8 @@ def is_relevant(title):
 
 
 # ----------- NEWS FETCH -----------
-def fetch_news(stock):
+
+def fetch_news(stock, max_items=5, max_age_days=30):
     query = quote_plus(f"{stock} stock")
     url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
@@ -98,6 +99,9 @@ def fetch_news(stock):
 
     seen = set()
     filtered = []
+
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+    cutoff = now - timedelta(days=max_age_days)
 
     for entry in feed.entries:
         title = entry.title.strip()
@@ -108,10 +112,20 @@ def fetch_news(stock):
         if not is_relevant(title):
             continue
 
+        # ---- DATE FILTER ----
+        published = getattr(entry, "published_parsed", None)
+        if published:
+            pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
+            
+            if pub_date < cutoff:
+                continue  # skip old news
+        else:
+            continue  # skip if no date (optional strictness)
+
         seen.add(title)
         filtered.append(entry)
 
-        if len(filtered) == 5:
+        if len(filtered) == max_items:
             break
 
     return filtered
