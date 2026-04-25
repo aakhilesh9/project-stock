@@ -1,6 +1,7 @@
 import feedparser
 from datetime import datetime
 import random
+import os
 
 STOCKS = ["Infosys", "HDFC Bank", "TCS"]
 
@@ -113,9 +114,13 @@ def main():
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
-    print("index.html updated successfully")
-    print("=== Script Finished ===")
+# after writing file
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html)
 
+print("index.html written")
+print("Current directory:", os.getcwd())
+print("Files in directory:", os.listdir())
 
 if __name__ == "__main__":
     main()
