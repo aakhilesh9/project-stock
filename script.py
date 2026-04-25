@@ -13,44 +13,43 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
           "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
-
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
     mapping = {
-        "ANGELONE": "ANGELONE.NS",
-        "ASIANPAINT": "ASIANPAINT.NS",
-        "BAJAJFINANCE": "BAJFINANCE.NS",
-        "COALINDIA": "COALINDIA.NS",
-        "DIVISLAB": "DIVISLAB.NS",
-        "DIXON": "DIXON.NS",
-        "EPIGRAL": "EPIGRAL.NS",
-        "FCL": "FCL.NS",
-        "GAIL": "GAIL.NS",
-        "HDFC BANK": "HDFCBANK.NS",
-        "ICICI BANK": "ICICIBANK.NS",
-        "INFOSYS": "INFY.NS",
-        "ITC": "ITC.NS",
-        "KIRLOSENG": "KIRLOSENG.NS",
-        "KOTAKBANK": "KOTAKBANK.NS",
-        "LAURUSLABS": "LAURUSLABS.NS",
-        "MANKIND": "MANKIND.NS",
-        "MARICO": "MARICO.NS",
-        "NTPC": "NTPC.NS",
-        "PETRONET": "PETRONET.NS",
-        "PFC": "PFC.NS",
-        "PIIND": "PIIND.NS",
-        "POLYCAB": "POLYCAB.NS",
-        "POONAWALLA": "POONAWALLA.NS",
-        "RELIANCE": "RELIANCE.NS",
-        "SBIN": "SBIN.NS",
-        "STYLAMIND": "STYLAMIND.NS",
-        "TCS": "TCS.NS",
-        "TRIVENI": "TRIVENI.NS",
-        "VBL": "VBL.NS",
-        "ZENTEC": "ZENTEC.NS",
-        "TMCV": "TMCV.NS", 
-        "TMPV": "TMPV.NS",
-    }
+    "ANGELONE": "ANGELONE.NS",
+    "ASIANPAINT": "ASIANPAINT.NS",
+    "BAJAJFINANCE": "BAJFINANCE.NS",
+    "COALINDIA": "COALINDIA.NS",
+    "DIVISLAB": "DIVISLAB.NS",
+    "DIXON": "DIXON.NS",
+    "EPIGRAL": "EPIGRAL.NS",
+    "FCL": "FCL.NS",  # Fineotex Chemical
+    "GAIL": "GAIL.NS",
+    "HDFC BANK": "HDFCBANK.NS",
+    "ICICI BANK": "ICICIBANK.NS",
+    "INFOSYS": "INFY.NS",
+    "ITC": "ITC.NS",
+    "KIRLOSENG": "KIRLOSENG.NS",
+    "KOTAKBANK": "KOTAKBANK.NS",
+    "LAURUSLABS": "LAURUSLABS.NS",
+    "MANKIND": "MANKIND.NS",
+    "MARICO": "MARICO.NS",
+    "NTPC": "NTPC.NS",
+    "PETRONET": "PETRONET.NS",
+    "PFC": "PFC.NS",
+    "PIIND": "PIIND.NS",
+    "POLYCAB": "POLYCAB.NS",
+    "POONAWALLA": "POONAWALLA.NS",
+    "RELIANCE": "RELIANCE.NS",
+    "SBIN": "SBIN.NS",
+    "STYLAMIND": "STYLAMIND.NS",
+    "TCS": "TCS.NS",
+    "TRIVENI": "TRIVENI.NS",
+    "VBL": "VBL.NS",
+    "ZENTEC": "ZENTEC.NS",
+    "TMCV": "TMCV.NS", 
+     "TMPV": "TMPV.NS", 
+}
 
     ticker = mapping.get(stock)
     if not ticker:
@@ -73,18 +72,25 @@ def get_stock_data(stock):
         return None
 
 
-# ----------- FILTER -----------
+# ----------- SMART FILTER -----------
 def is_relevant(title):
     title = title.lower()
+
     bad_keywords = [
         "ad", "sponsored", "live updates", "watch live",
         "youtube", "instagram", "tweet"
     ]
-    return not any(word in title for word in bad_keywords)
+
+    for word in bad_keywords:
+        if word in title:
+            return False
+
+    return True
 
 
-# ----------- NEWS FETCH (LATEST + TRENDING) -----------
-def fetch_news(stock, mode="latest", max_items=5):
+# ----------- NEWS FETCH -----------
+
+def fetch_news(stock, max_items=5, max_age_days=30):
     query = quote_plus(f"{stock} stock")
     url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
@@ -94,7 +100,7 @@ def fetch_news(stock, mode="latest", max_items=5):
     filtered = []
 
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
-    cutoff = now - timedelta(days=30 if mode == "latest" else 90)
+    cutoff = now - timedelta(days=max_age_days)
 
     for entry in feed.entries:
         title = entry.title.strip()
@@ -105,14 +111,15 @@ def fetch_news(stock, mode="latest", max_items=5):
         if not is_relevant(title):
             continue
 
+        # ---- DATE FILTER ----
         published = getattr(entry, "published_parsed", None)
-        if not published:
-            continue
-
-        pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
-
-        if pub_date < cutoff:
-            continue
+        if published:
+            pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
+            
+            if pub_date < cutoff:
+                continue  # skip old news
+        else:
+            continue  # skip if no date (optional strictness)
 
         seen.add(title)
         filtered.append(entry)
@@ -144,6 +151,7 @@ def generate_html(all_data):
             --text: #e2e8f0;
             --card: #1e293b;
             --muted: #94a3b8;
+            --accent: #38bdf8;
         }}
 
         body.light {{
@@ -151,6 +159,7 @@ def generate_html(all_data):
             --text: #1e293b;
             --card: #ffffff;
             --muted: #555;
+            --accent: #2563eb;
         }}
 
         body {{
@@ -171,7 +180,9 @@ def generate_html(all_data):
         }}
 
         button {{
-            margin-left: 5px;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--muted);
             padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -186,6 +197,7 @@ def generate_html(all_data):
         .stock-header {{
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }}
 
         .price {{
@@ -204,6 +216,11 @@ def generate_html(all_data):
             border-radius: 12px;
         }}
 
+        .card a {{
+            color: var(--text);
+            text-decoration: none;
+        }}
+
         .time {{
             font-size: 12px;
             color: var(--muted);
@@ -216,14 +233,14 @@ def generate_html(all_data):
             <h1>📈 Portfolio Stock News</h1>
 
             <div class="toggle">
-                <button onclick="toggleTheme()">Theme</button>
-                <button onclick="toggleNewsMode()">Latest / Trending</button>
+                <button onclick="toggleTheme()">Toggle Theme</button>
             </div>
 
             <div class="updated">Last updated: {now}</div>
     """
 
     for stock, data in all_data.items():
+        articles = data["news"]
         price_data = data["price"]
 
         if price_data:
@@ -242,27 +259,16 @@ def generate_html(all_data):
             <div class="grid">
         """
 
-        # LATEST
-        html += '<div class="news latest">'
-        for a in data["latest"]:
-            html += f"""
-            <div class="card">
-                <a href="{a.link}" target="_blank">{a.title}</a>
-                <div class="time">{format_time(a)}</div>
-            </div>
-            """
-        html += "</div>"
-
-        # TRENDING
-        html += '<div class="news trending" style="display:none;">'
-        for a in data["trending"]:
-            html += f"""
-            <div class="card">
-                <a href="{a.link}" target="_blank">{a.title}</a>
-                <div class="time">{format_time(a)}</div>
-            </div>
-            """
-        html += "</div>"
+        if not articles:
+            html += "<div>No news found</div>"
+        else:
+            for a in articles:
+                html += f"""
+                <div class="card">
+                    <a href="{a.link}" target="_blank">{a.title}</a>
+                    <div class="time">{format_time(a)}</div>
+                </div>
+                """
 
         html += "</div></div>"
 
@@ -277,25 +283,10 @@ def generate_html(all_data):
             );
         }
 
-        function toggleNewsMode() {
-            const latest = document.querySelectorAll(".latest");
-            const trending = document.querySelectorAll(".trending");
-
-            const isLatestVisible = latest[0].style.display !== "none";
-
-            latest.forEach(el => el.style.display = isLatestVisible ? "none" : "block");
-            trending.forEach(el => el.style.display = isLatestVisible ? "block" : "none");
-
-            localStorage.setItem("newsMode", isLatestVisible ? "trending" : "latest");
-        }
-
         window.onload = function() {
-            if (localStorage.getItem("theme") === "light") {
+            const saved = localStorage.getItem("theme");
+            if (saved === "light") {
                 document.body.classList.add("light");
-            }
-
-            if (localStorage.getItem("newsMode") === "trending") {
-                toggleNewsMode();
             }
         }
         </script>
@@ -315,14 +306,11 @@ def main():
 
     for stock in STOCKS:
         print(f"Fetching {stock}...")
-
-        latest_news = fetch_news(stock, mode="latest")
-        trending_news = fetch_news(stock, mode="trending")
+        news = fetch_news(stock)
         price = get_stock_data(stock)
 
         all_data[stock] = {
-            "latest": latest_news,
-            "trending": trending_news,
+            "news": news,
             "price": price
         }
 
