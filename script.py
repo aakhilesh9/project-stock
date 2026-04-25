@@ -3,6 +3,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from urllib.parse import quote_plus
 import os
+import yfinance as yf
 
 STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "DIXON", "EPIGRAL", "FCL", "GAIL", "HDFC BANK", "HDBFS",
@@ -12,6 +13,54 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
           "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
+# ----------- PRICE FETCH -----------
+def get_stock_data(stock):
+    mapping = {
+        "INFOSYS": "INFY.NS",
+        "TCS": "TCS.NS",
+        "HDFC BANK": "HDFCBANK.NS",
+        "ICICI BANK": "ICICIBANK.NS",
+        "RELIANCE": "RELIANCE.NS",
+        "SBIN": "SBIN.NS",
+        "ITC": "ITC.NS"
+    }
+
+    ticker = mapping.get(stock)
+    if not ticker:
+        return None
+
+    try:
+        data = yf.Ticker(ticker)
+        hist = data.history(period="1d")
+
+        if hist.empty:
+            return None
+
+        close = hist["Close"].iloc[-1]
+        open_ = hist["Open"].iloc[-1]
+        change = ((close - open_) / open_) * 100
+
+        return round(close, 2), round(change, 2)
+
+    except:
+        return None
+
+
+# ----------- SMART FILTER -----------
+def is_relevant(title):
+    title = title.lower()
+
+    bad_keywords = [
+        "ad", "sponsored", "live updates", "watch live",
+        "youtube", "instagram", "tweet"
+    ]
+
+    for word in bad_keywords:
+        if word in title:
+            return False
+
+    return True
+
 
 # ----------- NEWS FETCH -----------
 def fetch_news(stock):
@@ -19,7 +68,26 @@ def fetch_news(stock):
     url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
     feed = feedparser.parse(url)
-    return feed.entries[:5] if feed.entries else []
+
+    seen = set()
+    filtered = []
+
+    for entry in feed.entries:
+        title = entry.title.strip()
+
+        if title in seen:
+            continue
+
+        if not is_relevant(title):
+            continue
+
+        seen.add(title)
+        filtered.append(entry)
+
+        if len(filtered) == 5:
+            break
+
+    return filtered
 
 
 def format_time(entry):
@@ -27,7 +95,7 @@ def format_time(entry):
 
 
 # ----------- HTML -----------
-def generate_html(all_news):
+def generate_html(all_data):
     now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S IST')
 
     html = f"""
@@ -35,7 +103,7 @@ def generate_html(all_news):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Stock News Dashboard</title>
+        <title>Stock Dashboard</title>
 
         <style>
         :root {{
@@ -55,7 +123,7 @@ def generate_html(all_news):
         }}
 
         body {{
-            font-family: -apple-system, sans-serif;
+            font-family: sans-serif;
             margin: 0;
             background: var(--bg);
             color: var(--text);
@@ -86,6 +154,16 @@ def generate_html(all_news):
             margin-bottom: 20px;
         }}
 
+        .stock-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+
+        .price {{
+            font-weight: bold;
+        }}
+
         .grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -112,7 +190,7 @@ def generate_html(all_news):
 
     <body>
         <div class="container">
-            <h1>📈 Stock News Dashboard</h1>
+            <h1>📈 Stock Dashboard</h1>
 
             <div class="toggle">
                 <button onclick="toggleTheme()">Toggle Theme</button>
@@ -121,10 +199,24 @@ def generate_html(all_news):
             <div class="updated">Last updated: {now}</div>
     """
 
-    for stock, articles in all_news.items():
+    for stock, data in all_data.items():
+        articles = data["news"]
+        price_data = data["price"]
+
+        if price_data:
+            price, change = price_data
+            color = "#22c55e" if change >= 0 else "#ef4444"
+            price_html = f'<div class="price" style="color:{color}">₹{price} ({change}%)</div>'
+        else:
+            price_html = '<div class="price">N/A</div>'
+
         html += f"""
-        <h2>{stock}</h2>
-        <div class="grid">
+        <div>
+            <div class="stock-header">
+                <h2>{stock}</h2>
+                {price_html}
+            </div>
+            <div class="grid">
         """
 
         if not articles:
@@ -138,9 +230,8 @@ def generate_html(all_news):
                 </div>
                 """
 
-        html += "</div>"
+        html += "</div></div>"
 
-    # ✅ FIXED: script is inside string
     html += """
         </div>
 
@@ -171,13 +262,19 @@ def generate_html(all_news):
 def main():
     print("=== Script Started ===")
 
-    all_news = {}
+    all_data = {}
 
     for stock in STOCKS:
         print(f"Fetching {stock}...")
-        all_news[stock] = fetch_news(stock)
+        news = fetch_news(stock)
+        price = get_stock_data(stock)
 
-    html = generate_html(all_news)
+        all_data[stock] = {
+            "news": news,
+            "price": price
+        }
+
+    html = generate_html(all_data)
 
     os.makedirs("public", exist_ok=True)
 
