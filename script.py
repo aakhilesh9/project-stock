@@ -13,45 +13,6 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "SBIN", "STYLAMIND", "TATACAP", "TCS", "TMCV",
           "TMPV", "TRIVENI", "VBL", "ZENTEC"]
 
-ALIASES = {
-    "INFOSYS": ["infosys", "infy"],
-    "HDFC BANK": ["hdfc bank", "hdfcbank"],
-    "RELIANCE": ["reliance", "ril"],
-    "ICICI BANK": ["icici bank", "icicibank"],
-    "SBIN": ["sbi", "state bank"],
-
-    "ANGELONE" : ["Angel one", "Angel one ltd."],
-    "ASIANPAINT": ["Asianpaint", "Asian paint", "Asian paint ltd."],
-    "BAJAJFINANCE": ["Bajajfinance", "Bajaj+finance"], 
-    "COALINDIA":["Coalindia", "Coal+India", "Coal India Ltd"],
-    "DIVISLAB": ["Divis laboratory", "Divis ltd"],
-    "DIXON": ["Dixon tech", "Dixon technologies"],
-    "EPIGRAL":["Epigral","Epigral pvt"],
-    "FCL":["Fineotex", "Fineotex pvt ltd", "fineotex ltd"],
-    "GAIL":["Gail India", "Gas Authority of India"],
-    "HDBFS":["HDB financial services", "HDB financial"],
-    "ITC":["ITC ltd", "ITC limited", "ITC share"],
-    "KIRLOSENG":["Kirloskar oil engines"],
-    "KOTAKBANK":["Kotak Mahindra bank"],
-    "LAURUSLABS":["Laurus", "Laurus labs"],
-    "MANKIND":["Mankind pharma"],
-    "MARICO":["Marico"],
-    "NTPC":["National Thermal Power corporaiton"],
-    "PETRONET":["Petronet LNG"],
-    "PFC":["Power Finance Corporaiton"],
-    "PIIND":["PI Industries", "PI Industry"],
-    "POLYCAB":["POLYCAB India"],
-    "POONAWALLA":["Poonawalla"],
-    "STYLAMIND":["Stylam"],
-    "TATACAP":["Tata capital"],
-    "TCS":["Tata Consultancy"],
-    "TMCV":["Tata Motors"],
-    "TMPV":["Tata Motors"],
-    "TRIVENI":["Triveni"],
-    "VBL":["Varun Beverages"],
-    "ZENTEC":["Zen technologies"]
-}
-
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
     mapping = {
@@ -157,11 +118,6 @@ def fetch_news(stock, mode="latest", max_items=5):
     for entry in all_entries:
         title = entry.title.strip()
         title_lower = title.lower()
-
-        # ---- ALIAS FILTER ----
-        aliases = ALIASES.get(stock, [stock.lower()])
-        if not any(alias in title_lower for alias in aliases):
-            continue
 
         if title in seen:
             continue
