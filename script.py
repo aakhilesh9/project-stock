@@ -51,7 +51,6 @@ def get_stock_data(stock):
     # --- Special cases / corrections ---
     "TMCV": "TATAMOTORS.NS",  # assuming Tata Motors (CV not separately listed)
 }
-    }
 
     ticker = mapping.get(stock)
     if not ticker:
