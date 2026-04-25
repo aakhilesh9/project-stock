@@ -15,7 +15,7 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
 
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
-    mmapping = {
+    mapping = {
     "ANGELONE": "ANGELONE.NS",
     "ASIANPAINT": "ASIANPAINT.NS",
     "BAJAJFINANCE": "BAJFINANCE.NS",
