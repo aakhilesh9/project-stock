@@ -31,10 +31,10 @@ jobs:
       - name: Run script
         run: python script.py
 
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add -A
-          git commit -m "Auto update $(date)" || echo "No changes"
-          git push origin HEAD:main
+- name: Commit and push
+  run: |
+    git config user.name "github-actions"
+    git config user.email "github-actions@github.com"
+    git add -f index.html  # Use -f to force add if ignored
+    git commit -m "Auto update $(date)" || echo "No changes"
+    git push origin HEAD:main
