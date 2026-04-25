@@ -143,7 +143,7 @@ def generate_html(all_data):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Stock Dashboard</title>
+        <title>Portfolio Stock News</title>
 
         <style>
         :root {{
@@ -230,7 +230,7 @@ def generate_html(all_data):
 
     <body>
         <div class="container">
-            <h1>📈 Stock Dashboard</h1>
+            <h1>📈 Portfolio Stock News</h1>
 
             <div class="toggle">
                 <button onclick="toggleTheme()">Toggle Theme</button>
