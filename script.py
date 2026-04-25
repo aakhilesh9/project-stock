@@ -11,7 +11,7 @@ def fetch_news(stock):
 def generate_html(all_news):
     html = f"<html><head><title>Stock News</title></head><body>"
     html += f"<h1>Stock News Dashboard</h1>"
-    html += f"<p>Last updated: {datetime.now()}</p>"
+    html += f"<p>Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>"
 
     for stock, articles in all_news.items():
         html += f"<h2>{stock}</h2><ul>"
