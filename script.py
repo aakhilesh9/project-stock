@@ -111,12 +111,14 @@ def main():
     print("Generating HTML...")
     html = generate_html(all_news)
 
-    with open("index.html", "w", encoding="utf-8") as f:
+    # NEW: Create a dedicated public folder for the website
+    os.makedirs("public", exist_ok=True)
+
+    # NEW: Write the HTML file into the public folder
+    with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
-    print("index.html written")
-    print("Current directory:", os.getcwd())
-    print("Files in directory:", os.listdir())
+    print("public/index.html written successfully")
 
 if __name__ == "__main__":
     main()

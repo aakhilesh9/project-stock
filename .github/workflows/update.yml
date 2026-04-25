@@ -5,8 +5,9 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
 
+# Simplified permissions
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -30,20 +31,10 @@ jobs:
       - name: Run script
         run: python script.py
 
-      - name: Commit and push changes
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          if [ -f index.html ]; then
-            git add -f index.html
-            git commit -m "Auto update: $(date)" || echo "No changes to commit"
-            git push origin HEAD:main
-          fi
-
       - name: Upload artifact for deployment
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './public' # Tells GitHub to ONLY upload our new public folder
 
   deploy:
     needs: build
