@@ -104,16 +104,17 @@ def fetch_news(stock, mode="latest", max_items=5):
 
     all_entries = []
 
-    # collect from all feeds
     for url in urls:
         feed = feedparser.parse(url)
         all_entries.extend(feed.entries)
 
-    seen = set()
-    filtered = []
-
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
     cutoff = now - timedelta(days=30 if mode == "latest" else 90)
+
+    seen = set()
+    scored = []
+
+    stock_key = stock.lower().replace(" ", "")
 
     for entry in all_entries:
         title = entry.title.strip()
@@ -135,12 +136,25 @@ def fetch_news(stock, mode="latest", max_items=5):
             continue
 
         seen.add(title)
-        filtered.append((pub_date, entry))
 
-    # sort latest first
-    filtered.sort(key=lambda x: x[0], reverse=True)
+        # ---- SOFT SCORING ----
+        score = 0
 
-    return [entry for _, entry in filtered[:max_items]]
+        # direct match gets priority
+        if stock_key in title_lower.replace(" ", ""):
+            score += 2
+
+        # bonus for important keywords
+        important_words = ["result", "profit", "order", "deal", "growth", "revenue"]
+        if any(word in title_lower for word in important_words):
+            score += 1
+
+        scored.append((score, pub_date, entry))
+
+    # sort by score first, then date
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    return [entry for _, _, entry in scored[:max_items]]
 
 
 def format_time(entry):
