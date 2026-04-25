@@ -92,18 +92,7 @@ def is_relevant(title):
 
 def fetch_news(stock, max_items=5, max_age_days=30):
     query = quote_plus(f"{stock} stock")
-    def get_feed_urls(stock):
-    q = quote_plus(f"{stock} stock")
-
-    return [
-        f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
-
-        f"https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms",
-        f"https://www.moneycontrol.com/rss/business.xml",
-        f"https://www.livemint.com/rss/markets",
-        
-        f"https://feeds.reuters.com/reuters/businessNews"
-    ]
+    url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
     feed = feedparser.parse(url)
 
