@@ -12,7 +12,6 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB", "DI
 def get_stock_data(stock):
     mapping = {
         "ANGELONE": "ANGELONE.NS"
-        "ASIANPAINT": "ASIANPAINT.NS"
         "INFOSYS": "INFY.NS",
         "TCS": "TCS.NS",
         "HDFC BANK": "HDFCBANK.NS",
