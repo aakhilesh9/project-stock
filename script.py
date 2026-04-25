@@ -87,23 +87,38 @@ def is_relevant(title):
 
     return True
 
+def get_feed_urls(stock):
+    q = quote_plus(f"{stock} stock")
+
+    return [
+        f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
+        "https://www.moneycontrol.com/rss/business.xml",
+        "https://www.livemint.com/rss/markets",
+        "https://feeds.reuters.com/reuters/businessNews"
+    ]
 
 # ----------- NEWS FETCH -----------
 
-def fetch_news(stock, max_items=5, max_age_days=30):
-    query = quote_plus(f"{stock} stock")
-    url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
+def fetch_news(stock, mode="latest", max_items=5):
+    urls = get_feed_urls(stock)
 
-    feed = feedparser.parse(url)
+    all_entries = []
 
-    seen = set()
-    filtered = []
+    for url in urls:
+        feed = feedparser.parse(url)
+        all_entries.extend(feed.entries)
 
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
-    cutoff = now - timedelta(days=max_age_days)
+    cutoff = now - timedelta(days=30 if mode == "latest" else 90)
 
-    for entry in feed.entries:
+    seen = set()
+    scored = []
+
+    stock_key = stock.lower().replace(" ", "")
+
+    for entry in all_entries:
         title = entry.title.strip()
+        title_lower = title.lower()
 
         if title in seen:
             continue
@@ -111,7 +126,6 @@ def fetch_news(stock, max_items=5, max_age_days=30):
         if not is_relevant(title):
             continue
 
-        # ---- DATE FILTER ----
         published = getattr(entry, "published_parsed", None)
         if published:
             pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
@@ -120,14 +134,34 @@ def fetch_news(stock, max_items=5, max_age_days=30):
                 continue  # skip old news
         else:
             continue  # skip if no date (optional strictness)
+        if not published:
+            continue
+
+        pub_date = datetime(*published[:6], tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Asia/Kolkata"))
+
+        if pub_date < cutoff:
+            continue
 
         seen.add(title)
-        filtered.append(entry)
 
-        if len(filtered) == max_items:
-            break
+        # ---- SOFT SCORING ----
+        score = 0
 
-    return filtered
+        # direct match gets priority
+        if stock_key in title_lower.replace(" ", ""):
+            score += 2
+
+        # bonus for important keywords
+        important_words = ["result", "profit", "order", "deal", "growth", "revenue"]
+        if any(word in title_lower for word in important_words):
+            score += 1
+
+        scored.append((score, pub_date, entry))
+
+    # sort by score first, then date
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    return [entry for _, _, entry in scored[:max_items]]
 
 
 def format_time(entry):
