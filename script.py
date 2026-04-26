@@ -12,7 +12,7 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
           "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
           "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
-          "SBIN", "STYLAMIND", "TCS", "TMPV", "TMCV, ""TRIVENI", "VBL", "ZENTEC"]
+          "SBIN", "STYLAMIND", "TCS", "TMPV", "TMCV", "TRIVENI", "VBL", "ZENTEC"]
 
 # ----------- RSS SOURCES (PRIORITY ORDER) -----------
 RSS_SOURCES = [
@@ -42,23 +42,23 @@ DAYS_LIMIT = 7
 STOCK_KEYWORDS = {
     "ANGELONE": ["angel one", "angelone", "angel broking"],
     
-    "ASIANPAINT": ["asian paints", "Asian paint stock"],
+    "ASIANPAINT": ["asian paints", "Asian paint stock", "asian paints share"],
     
     "BAJAJFINANCE": ["bajaj finance", "BAJAJFINANCE stock"],
     
-    "COALINDIA": ["coal india", "Coal India stock"],
+    "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
     
-    "DIVISLAB": ["divis", "divi's labs", "divis labs", "divis laboratories"],
+    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"],
     
     "DIXON": ["dixon technologies", "dixon tech"],
     
     "EPIGRAL": ["epigral", "epigral ltd"],
     
-    "FCL": ["fineotex", "fineotex chemical"],
+    "FCL": ["fineotex", "fineotex chemical", "fcl stock", "fineotex share"],
     
     "GAIL": ["gail", "gail india"],
     
-    "HDBFS":["HDB Financial"],
+    "HDBFS":["HDB Financial", "hdfc financial"],
 
     "HDFC BANK": ["hdfc bank", "hdfc"],
     
@@ -100,7 +100,7 @@ STOCK_KEYWORDS = {
     
     "TMPV":["Tata motors", "TPMV"],
 
-    "TMCV": ["Tata motors", "TPCV"],
+    "TMCV": ["Tata motors", "TMCV"],
 
     "TRIVENI": ["triveni turbine", "triveni"],
     
