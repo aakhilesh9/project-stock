@@ -431,7 +431,6 @@ def generate_html(all_data):
 
         <div class="updated">Last updated: {now}</div>
     """
-    from datetime import datetime
 
     def get_latest_news_time(stock_data):
         news = stock_data["news"]
@@ -446,7 +445,7 @@ def generate_html(all_data):
         key=lambda x: get_latest_news_time(x[1]),
         reverse=True
     )
-    
+
     for stock, data in sorted_items:
         articles = data["news"]
         price_data = data["price"]
