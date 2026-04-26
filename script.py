@@ -161,18 +161,43 @@ def get_stock_data(stock):
 
     try:
         data = yf.Ticker(ticker)
-        hist = data.history(period="1d")
 
-        if hist.empty:
+        # Fetch multiple periods
+        hist_1d = data.history(period="1d")
+        hist_1mo = data.history(period="1mo")
+        hist_3mo = data.history(period="3mo")
+
+        if hist_1d.empty or hist_1mo.empty:
             return None
 
-        close = hist["Close"].iloc[-1]
-        open_ = hist["Open"].iloc[-1]
-        change = ((close - open_) / open_) * 100
+        # --- Current price ---
+        close = hist_1d["Close"].iloc[-1]
+        open_ = hist_1d["Open"].iloc[-1]
 
-        return round(close, 2), round(change, 2)
+        daily_change = ((close - open_) / open_) * 100
 
-    except:
+        # --- Weekly change (last 5 trading days) ---
+        if len(hist_1mo) >= 5:
+            week_ago = hist_1mo["Close"].iloc[-5]
+            weekly_change = ((close - week_ago) / week_ago) * 100
+        else:
+            weekly_change = None
+
+        # --- Monthly change (last ~21 trading days) ---
+        if len(hist_3mo) >= 21:
+            month_ago = hist_3mo["Close"].iloc[-21]
+            monthly_change = ((close - month_ago) / month_ago) * 100
+        else:
+            monthly_change = None
+
+        return {
+            "price": round(close, 2),
+            "daily": round(daily_change, 2),
+            "weekly": round(weekly_change, 2) if weekly_change else None,
+            "monthly": round(monthly_change, 2) if monthly_change else None
+        }
+
+    except Exception as e:
         return None
 
 
