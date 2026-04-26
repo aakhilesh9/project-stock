@@ -122,7 +122,7 @@ def is_duplicate(title, existing_titles):
 
 # ----------- NEWS FETCH -----------
 
-def fetch_news(stock):
+def fetch_news(stock, global_seen_titles):
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
 
     collected = []
@@ -154,10 +154,16 @@ def fetch_news(stock):
             if not is_recent(dt, now):
                 continue
 
+            # Local duplicate
             if is_duplicate(title, titles):
                 continue
 
+            # Global duplicate (across stocks)
+            if is_duplicate(title, global_seen_titles):
+                continue
+
             titles.append(title)
+            global_seen_titles.append(title)
 
             collected.append({
                 "title": title,
@@ -386,9 +392,11 @@ def generate_html(all_data):
 def main():
     all_data = {}
 
+    global_seen_titles = []
+
     for stock in STOCKS:
         print(f"Fetching {stock}...")
-        news = fetch_news(stock)
+        news = fetch_news(stock, global_seen_titles)
         price = get_stock_data(stock)
 
         all_data[stock] = {
