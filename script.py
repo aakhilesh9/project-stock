@@ -173,7 +173,7 @@ def fetch_news(stock):
 # ----------- HTML -----------
 
 def generate_html(all_data):
-    now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S IST')
+    now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%d %b %Y %I:%M %p')
 
     html = f"""
     <html>
@@ -189,6 +189,7 @@ def generate_html(all_data):
         --card: #1e293b;
         --muted: #94a3b8;
         --accent: #38bdf8;
+        --border: #334155;
     }}
 
     body.light {{
@@ -197,6 +198,7 @@ def generate_html(all_data):
         --card: #ffffff;
         --muted: #555;
         --accent: #2563eb;
+        --border: #ddd;
     }}
 
     body {{
@@ -212,15 +214,16 @@ def generate_html(all_data):
         padding: 20px;
     }}
 
-    .toggle {{
-        text-align: right;
-        margin-bottom: 10px;
+    .header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }}
 
     button {{
         background: var(--card);
         color: var(--text);
-        border: 1px solid var(--muted);
+        border: 1px solid var(--border);
         padding: 6px 12px;
         border-radius: 8px;
         cursor: pointer;
@@ -229,13 +232,28 @@ def generate_html(all_data):
     .updated {{
         text-align: center;
         color: var(--muted);
-        margin-bottom: 20px;
+        margin: 10px 0 25px;
+    }}
+
+    .stock {{
+        margin-bottom: 35px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 20px;
     }}
 
     .stock-header {{
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 10px;
+    }}
+
+    .stock h2 {{
+        margin: 0;
+    }}
+
+    .price {{
+        font-weight: bold;
     }}
 
     .grid {{
@@ -248,10 +266,16 @@ def generate_html(all_data):
         background: var(--card);
         padding: 15px;
         border-radius: 12px;
+        border: 1px solid var(--border);
+        transition: 0.2s;
+    }}
+
+    .card:hover {{
+        transform: translateY(-3px);
     }}
 
     .card a {{
-        color: var(--text);   /* FIX: no more blue links */
+        color: var(--text);
         text-decoration: none;
         font-weight: 500;
     }}
@@ -268,11 +292,16 @@ def generate_html(all_data):
 
     .source {{
         font-size: 11px;
-        background: var(--muted);
-        color: var(--bg);
+        background: var(--accent);
+        color: white;
         padding: 2px 6px;
         border-radius: 6px;
         margin-left: 6px;
+    }}
+
+    .empty {{
+        color: var(--muted);
+        font-size: 14px;
     }}
     </style>
     </head>
@@ -280,9 +309,8 @@ def generate_html(all_data):
     <body>
     <div class="container">
 
-        <h1>📈 Portfolio Stock News</h1>
-
-        <div class="toggle">
+        <div class="header">
+            <h1>📈 Portfolio Stock News</h1>
             <button onclick="toggleTheme()">Toggle Theme</button>
         </div>
 
@@ -290,22 +318,42 @@ def generate_html(all_data):
     """
 
     for stock, data in all_data.items():
-        html += f"<h2>{stock}</h2><div class='grid'>"
+        articles = data["news"]
+        price_data = data["price"]
 
-        for a in data["news"]:
-            time_str = a["date"].strftime('%d %b %Y %I:%M %p')
+        if price_data:
+            price, change = price_data
+            color = "#22c55e" if change >= 0 else "#ef4444"
+            price_html = f'<div class="price" style="color:{color}">₹{price} ({change}%)</div>'
+        else:
+            price_html = '<div class="price">N/A</div>'
 
-            html += f"""
-            <div class="card">
-                <a href="{a['link']}" target="_blank">{a['title']}</a>
-                <div class="time">
-                    {time_str}
-                    <span class="source">{a['source']}</span>
-                </div>
+        html += f"""
+        <div class="stock">
+            <div class="stock-header">
+                <h2>{stock}</h2>
+                {price_html}
             </div>
-            """
+            <div class="grid">
+        """
 
-        html += "</div>"
+        if not articles:
+            html += '<div class="empty">No recent news found</div>'
+        else:
+            for a in articles:
+                time_str = a["date"].strftime('%d %b %I:%M %p')
+
+                html += f"""
+                <div class="card">
+                    <a href="{a['link']}" target="_blank">{a['title']}</a>
+                    <div class="time">
+                        {time_str}
+                        <span class="source">{a['source']}</span>
+                    </div>
+                </div>
+                """
+
+        html += "</div></div>"
 
     html += """
     </div>
