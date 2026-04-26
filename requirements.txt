@@ -1,1 +1,4 @@
 feedparser
+yfinance
+python-dateutil
+rapidfuzz
