@@ -431,8 +431,23 @@ def generate_html(all_data):
 
         <div class="updated">Last updated: {now}</div>
     """
+    from datetime import datetime
 
-    for stock, data in all_data.items():
+    def get_latest_news_time(stock_data):
+        news = stock_data["news"]
+        if not news:
+            return datetime.min  # push to bottom
+        return max(article["date"] for article in news)
+
+
+    # SORT STOCKS HERE
+    sorted_items = sorted(
+        all_data.items(),
+        key=lambda x: get_latest_news_time(x[1]),
+        reverse=True
+    )
+    
+    for stock, data in sorted_items:
         articles = data["news"]
         price_data = data["price"]
 
