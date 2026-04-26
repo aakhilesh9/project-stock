@@ -353,26 +353,37 @@ def generate_html(all_data):
 
     .news-item {{
     display: flex;
-    flex-direction: column;   /* stack on mobile */
-    padding: 4px 0;
+    justify-content: space-between;
+    gap: 10px;
+}}
+
+.news-item a {{
+    flex: 1;
+    min-width: 0;  /* IMPORTANT for ellipsis */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+
+.meta {{
+    white-space: nowrap;
+}}
+
+/* MOBILE FIX */
+@media (max-width: 600px) {{
+    .news-item {{
+        flex-direction: column;
+        align-items: flex-start;
     }}
 
     .news-item a {{
-        color: #E5E5E5;
-        text-decoration: none;
-        word-break: break-word;     /* prevents overflow */
-        line-height: 1.3;
-    }}
-
-    .news-item a:hover {{
-        color: #00FF90;
+        white-space: normal;   /* allow wrapping */
     }}
 
     .meta {{
-        color: #888;
-        font-size: 11px;
         margin-top: 2px;
     }}
+}}
 
     .source {{
         color: #FFD700;
