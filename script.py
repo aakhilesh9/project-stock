@@ -435,8 +435,7 @@ def generate_html(all_data):
     def get_latest_news_time(stock_data):
         news = stock_data["news"]
         if not news:
-            from datetime import datetime as _dt
-            return _dt.min  # push to bottom
+            return datetime(1970, 1, 1)  # push to bottom safely
         return max(article["date"] for article in news)
 
 
