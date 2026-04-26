@@ -17,16 +17,22 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
 # ----------- RSS SOURCES (PRIORITY ORDER) -----------
 RSS_SOURCES = [
     ("Google News", "GOOGLE_NEWS"),
+    ("BusinessLine companies", "https://www.thehindubusinessline.com/companies/feeder/default.rss"),
     ("BusinessLine", "https://www.thehindubusinessline.com/feeder/default.rss"),
+    ("BusinessLine markets", "https://www.thehindubusinessline.com/markets/feeder/default.rss"),
+    ("FE companies", "https://www.financialexpress.com/industry/companies/feed/")
     ("Financial Express", "https://www.financialexpress.com/feed/"),
     ("FE Markets", "https://www.financialexpress.com/markets/feed/"),
     ("BL Markets", "https://www.thehindubusinessline.com/markets/feeder/default.rss"),
+    ("BS companies", "https://www.business-standard.com/rss/companies-101.rss"),
     ("Business Standard", "https://www.business-standard.com/rss/markets-106.rss"),
     ("BS Top", "https://www.business-standard.com/rss/home_page_top_stories.rss"),
     ("Economic Times", "https://economictimes.indiatimes.com/rssfeedstopstories.cms"),
+    ("ET companies", "https://economictimes.indiatimes.com/news/company/rssfeeds/2143429.cms"),
     ("ET Markets", "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms"),
     ("Mint Companies", "https://www.livemint.com/rss/companies"),
     ("Mint Markets", "https://www.livemint.com/rss/markets"),
+    ("Mint News","https://www.livemint.com/rss/news")
 ]
 
 SIMILARITY_THRESHOLD = 70
