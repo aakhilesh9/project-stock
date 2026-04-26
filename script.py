@@ -20,7 +20,7 @@ RSS_SOURCES = [
     ("BusinessLine companies", "https://www.thehindubusinessline.com/companies/feeder/default.rss"),
     ("BusinessLine", "https://www.thehindubusinessline.com/feeder/default.rss"),
     ("BusinessLine markets", "https://www.thehindubusinessline.com/markets/feeder/default.rss"),
-    ("FE companies", "https://www.financialexpress.com/industry/companies/feed/")
+    ("FE companies", "https://www.financialexpress.com/industry/companies/feed/"),
     ("Financial Express", "https://www.financialexpress.com/feed/"),
     ("FE Markets", "https://www.financialexpress.com/markets/feed/"),
     ("BL Markets", "https://www.thehindubusinessline.com/markets/feeder/default.rss"),
