@@ -183,16 +183,59 @@ def generate_html(all_data):
     <title>Portfolio Stock News</title>
 
     <style>
+    :root {{
+        --bg: #0f172a;
+        --text: #e2e8f0;
+        --card: #1e293b;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+    }}
+
+    body.light {{
+        --bg: #f5f5f5;
+        --text: #1e293b;
+        --card: #ffffff;
+        --muted: #555;
+        --accent: #2563eb;
+    }}
+
     body {{
         font-family: sans-serif;
-        background: #0f172a;
-        color: #e2e8f0;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
     }}
 
     .container {{
         max-width: 1100px;
         margin: auto;
         padding: 20px;
+    }}
+
+    .toggle {{
+        text-align: right;
+        margin-bottom: 10px;
+    }}
+
+    button {{
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--muted);
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+    }}
+
+    .updated {{
+        text-align: center;
+        color: var(--muted);
+        margin-bottom: 20px;
+    }}
+
+    .stock-header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }}
 
     .grid {{
@@ -202,19 +245,31 @@ def generate_html(all_data):
     }}
 
     .card {{
-        background: #1e293b;
+        background: var(--card);
         padding: 15px;
         border-radius: 12px;
     }}
 
+    .card a {{
+        color: var(--text);   /* FIX: no more blue links */
+        text-decoration: none;
+        font-weight: 500;
+    }}
+
+    .card a:hover {{
+        color: var(--accent);
+    }}
+
     .time {{
         font-size: 12px;
-        color: #94a3b8;
+        color: var(--muted);
+        margin-top: 6px;
     }}
 
     .source {{
         font-size: 11px;
-        background: #334155;
+        background: var(--muted);
+        color: var(--bg);
         padding: 2px 6px;
         border-radius: 6px;
         margin-left: 6px;
@@ -224,8 +279,14 @@ def generate_html(all_data):
 
     <body>
     <div class="container">
-    <h1>📈 Portfolio Stock News</h1>
-    <div>Last updated: {now}</div>
+
+        <h1>📈 Portfolio Stock News</h1>
+
+        <div class="toggle">
+            <button onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+
+        <div class="updated">Last updated: {now}</div>
     """
 
     for stock, data in all_data.items():
@@ -246,7 +307,29 @@ def generate_html(all_data):
 
         html += "</div>"
 
-    html += "</div></body></html>"
+    html += """
+    </div>
+
+    <script>
+    function toggleTheme() {
+        document.body.classList.toggle("light");
+        localStorage.setItem("theme",
+            document.body.classList.contains("light") ? "light" : "dark"
+        );
+    }
+
+    window.onload = function() {
+        const saved = localStorage.getItem("theme");
+        if (saved === "light") {
+            document.body.classList.add("light");
+        }
+    }
+    </script>
+
+    </body>
+    </html>
+    """
+
     return html
 
 
