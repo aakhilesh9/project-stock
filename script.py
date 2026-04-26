@@ -8,7 +8,7 @@ from rapidfuzz.fuzz import ratio
 from dateutil import parser as dateparser
 
 STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
-          "DIXON", "EPIGRAL", "FCL", "GAIL", "HDFC BANK",
+          "DIXON", "EPIGRAL", "FCL", "GAIL", "HDBFS", "HDFC BANK",
           "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
           "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
           "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
@@ -52,6 +52,8 @@ STOCK_KEYWORDS = {
     
     "GAIL": ["gail", "gail india"],
     
+    "HDBFS":["HDB Financial"],
+
     "HDFC BANK": ["hdfc bank", "hdfc"],
     
     "ICICI BANK": ["icici bank", "icici"],
@@ -113,6 +115,7 @@ def get_stock_data(stock):
         "EPIGRAL": "EPIGRAL.NS",
         "FCL": "FCL.NS",
         "GAIL": "GAIL.NS",
+        "HDBFS": "HDBFS.NS",
         "HDFC BANK": "HDFCBANK.NS",
         "ICICI BANK": "ICICIBANK.NS",
         "INFOSYS": "INFY.NS",
@@ -190,13 +193,22 @@ def is_duplicate(title, existing_titles):
 
 # ----------- RELEVANCE FILTER -----------
 
-def is_relevant_to_stock(title, stock):
-    title = title.lower()
+import re
 
-    keywords = STOCK_KEYWORDS.get(stock, [stock.lower().replace(" ", "")])
+def normalize(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9 ]', ' ', text)   # remove punctuation
+    text = text.replace(" ", "")              # remove spaces
+    return text
+
+
+def is_relevant_to_stock(title, stock):
+    title_norm = normalize(title)
+
+    keywords = STOCK_KEYWORDS.get(stock, [stock])
 
     for kw in keywords:
-        if kw in title:
+        if normalize(kw) in title_norm:
             return True
 
     return False
