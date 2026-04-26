@@ -2,7 +2,7 @@ name: Update Stock News
 
 on:
   schedule:
-    - cron: "0 2,4,7,10,15 * * *"
+    - cron: "0 */4 * * *"   # every 4 hours
   workflow_dispatch:
 
 # Simplified permissions
