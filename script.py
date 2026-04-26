@@ -49,23 +49,23 @@ DAYS_LIMIT = 7
 STOCK_KEYWORDS = {
     "ANGELONE": ["angel one", "angelone", "angel broking"],
     
-    "ASIANPAINT": ["asian paints", "Asian paint stock", "asian paints share"],
+    "ASIANPAINT": ["asianpain","asian paints", "Asian paint stock", "asian paints share"],
     
-    "BAJAJFINANCE": ["bajaj finance", "BAJAJFINANCE stock"],
+    "BAJAJFINANCE": ["bajajfinance","bajaj finance", "BAJAJFINANCE stock"],
     
     "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
     
     "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"],
     
-    "DIXON": ["dixon technologies", "dixon tech"],
+    "DIXON": ["dixon","dixon technologies", "dixon tech"],
     
     "EPIGRAL": ["epigral", "epigral ltd"],
     
-    "FCL": ["fineotex", "fineotex chemical", "fcl stock", "fineotex share"],
+    "FCL": ["fcl","fineotex", "fineotex chemical", "fcl stock", "fineotex share"],
     
     "GAIL": ["gail", "gail india"],
     
-    "HDBFS":["HDB Financial", "hdfc financial"],
+    "HDBFS":["hdbfs","HDB Financial", "hdfc financial"],
 
     "HDFC BANK": ["hdfc bank", "hdfc"],
     
@@ -75,9 +75,9 @@ STOCK_KEYWORDS = {
     
     "ITC": ["itc"],
     
-    "KIRLOSENG": ["kirloskar oil", "kirloskar oil engines"],
+    "KIRLOSENG": ["kirloseng","kirloskar oil", "kirloskar oil engines"],
     
-    "KOTAKBANK": ["kotak bank", "kotak mahindra bank", "kotak"],
+    "KOTAKBANK": ["kotakbank","kotak bank", "kotak mahindra bank", "kotak"],
     
     "LAURUSLABS": ["laurus labs", "laurus"],
     
@@ -101,7 +101,7 @@ STOCK_KEYWORDS = {
     
     "SBIN": ["sbi", "state bank of india"],
     
-    "STYLAMIND": ["stylam industries", "stylam"],
+    "STYLAMIND": ["stylamind","stylam industries", "stylam"],
     
     "TCS": ["tcs", "tata consultancy services"],
     
@@ -326,7 +326,7 @@ def generate_html(all_data):
     .container {{
         max-width: 1100px;
         margin: auto;
-        padding: 20px;
+        padding: 10px;
     }}
 
     .header {{
