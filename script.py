@@ -79,7 +79,7 @@ STOCK_KEYWORDS = {
     
     "KOTAKBANK": ["kotakbank","kotak bank", "kotak mahindra bank", "kotak"],
     
-    "LAURUSLABS": ["laurus labs", "laurus"],
+    "LAURUSLABS": ["laurus labs", "laurus", "lauruslabs"],
     
     "MANKIND": ["mankind pharma", "mankind"],
     
@@ -91,7 +91,7 @@ STOCK_KEYWORDS = {
     
     "PFC": ["power finance corporation", "pfc"],
     
-    "PIIND": ["pi industries", "pi ind"],
+    "PIIND": ["P I industries","pi industries", "pi ind"],
     
     "POLYCAB": ["polycab"],
     
