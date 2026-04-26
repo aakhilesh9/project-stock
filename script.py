@@ -33,6 +33,69 @@ SIMILARITY_THRESHOLD = 70
 MAX_NEWS = 7
 DAYS_LIMIT = 7
 
+STOCK_KEYWORDS = {
+    "ANGELONE": ["angel one", "angelone", "angel broking"],
+    
+    "ASIANPAINT": ["asian paints"],
+    
+    "BAJAJFINANCE": ["bajaj finance"],
+    
+    "COALINDIA": ["coal india"],
+    
+    "DIVISLAB": ["divi's labs", "divis labs", "divis laboratories"],
+    
+    "DIXON": ["dixon technologies", "dixon tech"],
+    
+    "EPIGRAL": ["epigral", "epigral ltd"],
+    
+    "FCL": ["fineotex", "fineotex chemical"],
+    
+    "GAIL": ["gail", "gail india"],
+    
+    "HDFC BANK": ["hdfc bank", "hdfc"],
+    
+    "ICICI BANK": ["icici bank", "icici"],
+    
+    "INFOSYS": ["infosys", "infy"],
+    
+    "ITC": ["itc"],
+    
+    "KIRLOSENG": ["kirloskar oil", "kirloskar oil engines"],
+    
+    "KOTAKBANK": ["kotak bank", "kotak mahindra bank", "kotak"],
+    
+    "LAURUSLABS": ["laurus labs", "laurus"],
+    
+    "MANKIND": ["mankind pharma", "mankind"],
+    
+    "MARICO": ["marico"],
+    
+    "NTPC": ["ntpc"],
+    
+    "PETRONET": ["petronet lng", "petronet"],
+    
+    "PFC": ["power finance corporation", "pfc"],
+    
+    "PIIND": ["pi industries", "pi ind"],
+    
+    "POLYCAB": ["polycab"],
+    
+    "POONAWALLA": ["poonawalla fincorp", "poonawalla"],
+    
+    "RELIANCE": ["reliance", "ril", "mukesh ambani"],
+    
+    "SBIN": ["sbi", "state bank of india"],
+    
+    "STYLAMIND": ["stylam industries", "stylam"],
+    
+    "TCS": ["tcs", "tata consultancy services"],
+    
+    "TRIVENI": ["triveni turbine", "triveni"],
+    
+    "VBL": ["varun beverages", "vbl"],
+    
+    "ZENTEC": ["zen technologies", "zen tech"]
+}
 
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
@@ -119,6 +182,28 @@ def is_duplicate(title, existing_titles):
             return True
     return False
 
+# ----------- RELEVANCE FILTER -----------
+
+STOCK_KEYWORDS = {
+    "RELIANCE": ["reliance", "ril", "ambani"],
+    "ITC": ["itc"],
+    "INFOSYS": ["infosys", "infy"],
+    "HDFC BANK": ["hdfc", "hdfc bank"],
+    "ICICI BANK": ["icici"],
+    "SBIN": ["sbi", "state bank"],
+    # you can extend this gradually
+}
+
+def is_relevant_to_stock(title, stock):
+    title = title.lower()
+
+    keywords = STOCK_KEYWORDS.get(stock, [stock.lower().replace(" ", "")])
+
+    for kw in keywords:
+        if kw in title:
+            return True
+
+    return False
 
 # ----------- NEWS FETCH -----------
 
@@ -144,6 +229,9 @@ def fetch_news(stock, global_seen_titles):
                 break
 
             title = entry.title.strip()
+            # ---- RELEVANCE FILTER ----
+            if not is_relevant_to_stock(title, stock):
+                continue
 
             dt = parse_date(entry)
             if not dt:
