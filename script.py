@@ -44,7 +44,7 @@ STOCK_KEYWORDS = {
     
     "ASIANPAINT": ["asian paints", "Asian paint stock", "asian paints share"],
     
-    "BAJAJFINANCE": ["bajaj finance", "BAJAJFINANCE stock"],
+    "BAJAJFINANCE": ["bajaj finance", "BAJAJFINANCE stock", "Bajaj"],
     
     "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
     
@@ -58,7 +58,7 @@ STOCK_KEYWORDS = {
     
     "GAIL": ["gail", "gail india"],
     
-    "HDBFS":["HDB Financial", "hdfc financial"],
+    "HDBFS":["HDB Financial", "hdfc financial", "hdb financial services"],
 
     "HDFC BANK": ["hdfc bank", "hdfc"],
     
@@ -281,135 +281,105 @@ def fetch_news(stock, global_seen_titles):
 # ----------- HTML -----------
 
 def generate_html(all_data):
-    now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%d %b %Y %I:%M %p')
+    now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%d %b %Y %H:%M')
 
     html = f"""
     <html>
     <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio Stock News</title>
+    <title>Portfolio Monitor</title>
 
     <style>
-    :root {{
-        --bg: #0f172a;
-        --text: #e2e8f0;
-        --card: #1e293b;
-        --muted: #94a3b8;
-        --accent: #38bdf8;
-        --border: #334155;
-    }}
-
-    body.light {{
-        --bg: #f5f5f5;
-        --text: #1e293b;
-        --card: #ffffff;
-        --muted: #555;
-        --accent: #2563eb;
-        --border: #ddd;
-    }}
-
     body {{
-        font-family: sans-serif;
         margin: 0;
-        background: var(--bg);
-        color: var(--text);
+        background: #000;
+        color: #E5E5E5;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
     }}
 
     .container {{
-        max-width: 1100px;
+        max-width: 1200px;
         margin: auto;
-        padding: 20px;
+        padding: 15px;
     }}
 
     .header {{
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        border-bottom: 1px solid #222;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
     }}
 
-    button {{
-        background: var(--card);
-        color: var(--text);
-        border: 1px solid var(--border);
-        padding: 6px 12px;
-        border-radius: 8px;
-        cursor: pointer;
+    h1 {{
+        font-size: 16px;
+        margin: 0;
+        color: #FFD700;
+        letter-spacing: 1px;
     }}
 
-    .updated {{
-        text-align: center;
-        color: var(--muted);
-        margin: 10px 0 25px;
+    .time {{
+        color: #A0A0A0;
+        font-size: 12px;
     }}
 
     .stock {{
-        margin-bottom: 35px;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 20px;
+        margin-bottom: 18px;
+        border-bottom: 1px solid #111;
+        padding-bottom: 10px;
     }}
 
     .stock-header {{
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
     }}
 
-    .stock h2 {{
-        margin: 0;
+    .stock-name {{
+        font-weight: bold;
+        letter-spacing: 0.5px;
     }}
 
     .price {{
         font-weight: bold;
     }}
 
-    .grid {{
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 15px;
+    .news-list {{
+        list-style: none;
+        padding: 0;
+        margin: 0;
     }}
 
-    .card {{
-        background: var(--card);
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        transition: 0.2s;
+    .news-item {{
+        display: flex;
+        justify-content: space-between;
+        padding: 2px 0;
     }}
 
-    .card:hover {{
-        transform: translateY(-3px);
-    }}
-
-    .card a {{
-        color: var(--text);
+    .news-item a {{
+        color: #E5E5E5;
         text-decoration: none;
-        font-weight: 500;
     }}
 
-    .card a:hover {{
-        color: var(--accent);
+    .news-item a:hover {{
+        color: #00FF90;
     }}
 
-    .time {{
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 6px;
+    .meta {{
+        color: #888;
+        font-size: 11px;
+        white-space: nowrap;
+        margin-left: 10px;
     }}
 
     .source {{
-        font-size: 11px;
-        background: var(--accent);
-        color: white;
-        padding: 2px 6px;
-        border-radius: 6px;
-        margin-left: 6px;
+        color: #FFD700;
     }}
 
     .empty {{
-        color: var(--muted);
-        font-size: 14px;
+        color: #666;
+        font-size: 12px;
     }}
     </style>
     </head>
@@ -418,11 +388,9 @@ def generate_html(all_data):
     <div class="container">
 
         <div class="header">
-            <h1>📈 Portfolio Stock News</h1>
-            <button onclick="toggleTheme()">Toggle Theme</button>
+            <h1>PORTFOLIO MONITOR</h1>
+            <div class="time">{now}</div>
         </div>
-
-        <div class="updated">Last updated: {now}</div>
     """
 
     for stock, data in all_data.items():
@@ -431,57 +399,39 @@ def generate_html(all_data):
 
         if price_data:
             price, change = price_data
-            color = "#22c55e" if change >= 0 else "#ef4444"
-            price_html = f'<div class="price" style="color:{color}">₹{price} ({change}%)</div>'
+            color = "#00FF90" if change >= 0 else "#FF4D4D"
+            price_html = f'<span class="price" style="color:{color}">₹{price} ({change}%)</span>'
         else:
-            price_html = '<div class="price">N/A</div>'
+            price_html = '<span class="price">N/A</span>'
 
         html += f"""
         <div class="stock">
             <div class="stock-header">
-                <h2>{stock}</h2>
+                <div class="stock-name">{stock}</div>
                 {price_html}
             </div>
-            <div class="grid">
         """
 
         if not articles:
-            html += '<div class="empty">No recent news found</div>'
+            html += '<div class="empty">No recent news</div>'
         else:
+            html += '<ul class="news-list">'
             for a in articles:
-                time_str = a["date"].strftime('%d %b %I:%M %p')
-
+                time_str = a["date"].strftime('%H:%M')
                 html += f"""
-                <div class="card">
+                <li class="news-item">
                     <a href="{a['link']}" target="_blank">{a['title']}</a>
-                    <div class="time">
-                        {time_str}
-                        <span class="source">{a['source']}</span>
-                    </div>
-                </div>
+                    <span class="meta">
+                        <span class="source">{a['source']}</span> {time_str}
+                    </span>
+                </li>
                 """
+            html += '</ul>'
 
-        html += "</div></div>"
+        html += "</div>"
 
     html += """
     </div>
-
-    <script>
-    function toggleTheme() {
-        document.body.classList.toggle("light");
-        localStorage.setItem("theme",
-            document.body.classList.contains("light") ? "light" : "dark"
-        );
-    }
-
-    window.onload = function() {
-        const saved = localStorage.getItem("theme");
-        if (saved === "light") {
-            document.body.classList.add("light");
-        }
-    }
-    </script>
-
     </body>
     </html>
     """
