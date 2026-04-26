@@ -318,6 +318,9 @@ def generate_html(all_data):
     html = f"""
     <html>
     <head>
+
+    <link rel="manifest" href="manifest.json">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio Stock News</title>
@@ -331,6 +334,23 @@ def generate_html(all_data):
         --accent: #38bdf8;
         --border: #334155;
     }}
+
+    <script>
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {{
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById("installBtn").style.display = "block";
+    }});
+
+    document.getElementById("installBtn").onclick = async () => {{
+        if (deferredPrompt) {{
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+        }}
+    }};
+    </script>
 
     .price div {{
     margin-top: 4px;
@@ -455,6 +475,7 @@ def generate_html(all_data):
     <div class="container">
 
         <div class="header">
+            <button id="installBtn" style="display:none;">Install App</button>
             <h1>📈 Portfolio Stock News</h1>
             <button onclick="toggleTheme()">Toggle Theme</button>
         </div>
@@ -554,6 +575,73 @@ def generate_html(all_data):
             document.body.classList.add("light");
         }
     }
+    </script>
+
+    <script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js");
+    }
+    </script>
+
+    <script>
+    // --- AUTO REFRESH EVERY 2 HOURS ---
+    setTimeout(() => {
+        location.reload();
+    }, 2 * 60 * 60 * 1000);
+
+
+    // --- FAKE NOTIFICATION SYSTEM ---
+    function getCurrentTitles() {
+        return Array.from(document.querySelectorAll(".card a"))
+            .map(a => a.innerText.trim());
+    }
+
+    function showNotification(count) {
+        const div = document.createElement("div");
+        div.innerText = `🔔 ${count} new updates available`;
+        
+        div.style.position = "fixed";
+        div.style.top = "10px";
+        div.style.left = "50%";
+        div.style.transform = "translateX(-50%)";
+        div.style.background = "#22c55e";
+        div.style.color = "white";
+        div.style.padding = "10px 16px";
+        div.style.borderRadius = "8px";
+        div.style.zIndex = "9999";
+        div.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
+        
+        document.body.appendChild(div);
+
+        setTimeout(() => div.remove(), 5000);
+    }
+
+    function highlightNew(seenSet) {
+        document.querySelectorAll(".card").forEach(card => {
+            const title = card.querySelector("a").innerText.trim();
+
+            if (!seenSet.has(title)) {
+                card.style.border = "1px solid #22c55e";
+                card.style.boxShadow = "0 0 10px rgba(34,197,94,0.5)";
+            }
+        });
+    }
+
+    window.addEventListener("load", () => {
+        const current = getCurrentTitles();
+        const previous = JSON.parse(localStorage.getItem("seenTitles") || "[]");
+
+        const prevSet = new Set(previous);
+
+        const newItems = current.filter(t => !prevSet.has(t));
+
+        if (previous.length > 0 && newItems.length > 0) {
+            showNotification(newItems.length);
+            highlightNew(prevSet);
+        }
+
+        localStorage.setItem("seenTitles", JSON.stringify(current));
+    });
     </script>
 
     </body>
