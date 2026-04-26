@@ -352,16 +352,14 @@ def generate_html(all_data):
     }}
 
     .news-item {{
-    display: flex;
-    flex-direction: column;   /* stack on mobile */
-    padding: 4px 0;
+        display: flex;
+        justify-content: space-between;
+        padding: 2px 0;
     }}
 
     .news-item a {{
         color: #E5E5E5;
         text-decoration: none;
-        word-break: break-word;     /* prevents overflow */
-        line-height: 1.3;
     }}
 
     .news-item a:hover {{
@@ -371,7 +369,8 @@ def generate_html(all_data):
     .meta {{
         color: #888;
         font-size: 11px;
-        margin-top: 2px;
+        white-space: nowrap;
+        margin-left: 10px;
     }}
 
     .source {{
