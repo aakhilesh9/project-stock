@@ -26,7 +26,7 @@ RSS_SOURCES = [
     ("BusinessLine Technicals", "https://www.thehindubusinessline.com/portfolio/technical-analysis/feeder/default.rss"),
     ("FE companies", "https://www.financialexpress.com/industry/companies/feed/"),
     ("Financial Express", "https://www.financialexpress.com/feed/"),
-    ("FE Indian markets", "https://www.financialexpress.com/markets/indian-markets/feed/")
+    ("FE Indian markets", "https://www.financialexpress.com/markets/indian-markets/feed/"),
     ("FE Markets", "https://www.financialexpress.com/markets/feed/"),
     ("BL Markets", "https://www.thehindubusinessline.com/markets/feeder/default.rss"),
     ("BS companies", "https://www.business-standard.com/rss/companies-101.rss"),
