@@ -332,6 +332,11 @@ def generate_html(all_data):
         --border: #334155;
     }}
 
+    .price div {{
+    margin-top: 4px;
+    font-weight: normal;
+    }}
+
     body.light {{
         --bg: #f5f5f5;
         --text: #1e293b;
@@ -482,9 +487,26 @@ def generate_html(all_data):
         price_data = data["price"]
 
         if price_data:
-            price, change = price_data
-            color = "#22c55e" if change >= 0 else "#ef4444"
-            price_html = f'<div class="price" style="color:{color}">₹{price} ({change}%)</div>'
+            price = price_data["price"]
+            daily = price_data["daily"]
+            weekly = price_data["weekly"]
+            monthly = price_data["monthly"]
+
+            def get_color(val):
+                if val is None:
+                    return "#94a3b8"  # muted
+                return "#22c55e" if val >= 0 else "#ef4444"
+
+            price_html = f"""
+            <div class="price">
+                ₹{price}
+                <div style="font-size:12px;">
+                    <span style="color:{get_color(daily)}">1D: {daily}%</span> |
+                    <span style="color:{get_color(weekly)}">1W: {weekly if weekly is not None else 'N/A'}%</span> |
+                    <span style="color:{get_color(monthly)}">1M: {monthly if monthly is not None else 'N/A'}%</span>
+                </div>
+            </div>
+            """
         else:
             price_html = '<div class="price">N/A</div>'
 
