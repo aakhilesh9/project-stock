@@ -435,8 +435,14 @@ def generate_html(all_data):
     def get_latest_news_time(stock_data):
         news = stock_data["news"]
         if not news:
-            return datetime(1970, 1, 1)  # push to bottom safely
-        return max(article["date"] for article in news)
+            return datetime(1970, 1, 1, tzinfo=ZoneInfo("Asia/Kolkata"))
+
+        def normalize(dt):
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
+            return dt
+
+        return max(normalize(article["date"]) for article in news)
 
 
     # SORT STOCKS HERE
