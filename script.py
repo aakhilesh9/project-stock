@@ -12,7 +12,7 @@ STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
           "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
           "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
           "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
-          "SBIN", "STYLAMIND", "TCS", "TRIVENI", "VBL", "ZENTEC"]
+          "SBIN", "STYLAMIND", "TCS", "TMPV", "TMCV, ""TRIVENI", "VBL", "ZENTEC"]
 
 # ----------- RSS SOURCES (PRIORITY ORDER) -----------
 RSS_SOURCES = [
@@ -36,13 +36,13 @@ DAYS_LIMIT = 7
 STOCK_KEYWORDS = {
     "ANGELONE": ["angel one", "angelone", "angel broking"],
     
-    "ASIANPAINT": ["asian paints"],
+    "ASIANPAINT": ["asian paints", "Asian paint stock"],
     
-    "BAJAJFINANCE": ["bajaj finance"],
+    "BAJAJFINANCE": ["bajaj finance", "BAJAJFINANCE stock"],
     
-    "COALINDIA": ["coal india"],
+    "COALINDIA": ["coal india", "Coal India stock"],
     
-    "DIVISLAB": ["divi's labs", "divis labs", "divis laboratories"],
+    "DIVISLAB": ["divis", "divi's labs", "divis labs", "divis laboratories"],
     
     "DIXON": ["dixon technologies", "dixon tech"],
     
@@ -90,11 +90,15 @@ STOCK_KEYWORDS = {
     
     "TCS": ["tcs", "tata consultancy services"],
     
+    "TMPV":["Tata motors", "TPMV"],
+
+    "TMCV": ["Tata motors", "TPCV"],
+
     "TRIVENI": ["triveni turbine", "triveni"],
     
     "VBL": ["varun beverages", "vbl"],
     
-    "ZENTEC": ["zen technologies", "zen tech"]
+    "ZENTEC": ["zen technologies", "zen tech", "zentech"]
 }
 
 # ----------- PRICE FETCH -----------
@@ -128,6 +132,8 @@ def get_stock_data(stock):
         "SBIN": "SBIN.NS",
         "STYLAMIND": "STYLAMIND.NS",
         "TCS": "TCS.NS",
+        "TMCV": "TMCV.NS",
+        "TMPV": "TMPV.NS",
         "TRIVENI": "TRIVENI.NS",
         "VBL": "VBL.NS",
         "ZENTEC": "ZENTEC.NS",
@@ -183,16 +189,6 @@ def is_duplicate(title, existing_titles):
     return False
 
 # ----------- RELEVANCE FILTER -----------
-
-STOCK_KEYWORDS = {
-    "RELIANCE": ["reliance", "ril", "ambani"],
-    "ITC": ["itc"],
-    "INFOSYS": ["infosys", "infy"],
-    "HDFC BANK": ["hdfc", "hdfc bank"],
-    "ICICI BANK": ["icici"],
-    "SBIN": ["sbi", "state bank"],
-    # you can extend this gradually
-}
 
 def is_relevant_to_stock(title, stock):
     title = title.lower()
