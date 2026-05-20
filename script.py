@@ -404,6 +404,22 @@ def generate_html(all_data):
         margin-bottom: 35px;
         border-bottom: 1px solid var(--border);
         padding-bottom: 20px;
+        border-left: 4px solid transparent;
+        padding-left: 14px;
+        border-radius: 4px;
+        transition: border-color 0.2s;
+    }}
+
+    .stock.trend-up {{
+        border-left-color: #22c55e;
+    }}
+
+    .stock.trend-down {{
+        border-left-color: #ef4444;
+    }}
+
+    .stock.trend-neutral {{
+        border-left-color: #94a3b8;
     }}
 
     .stock-header {{
@@ -496,6 +512,29 @@ def generate_html(all_data):
     .summary-table thead th {{
         padding: 10px 14px;
         white-space: nowrap;
+        cursor: default;
+    }}
+
+    .summary-table thead th.sortable {{
+        cursor: pointer;
+        user-select: none;
+    }}
+
+    .summary-table thead th.sortable:hover {{
+        background: rgba(255,255,255,0.15);
+    }}
+
+    .summary-table thead th .sort-icon {{
+        display: inline-block;
+        margin-left: 5px;
+        opacity: 0.4;
+        font-size: 11px;
+        transition: opacity 0.15s;
+    }}
+
+    .summary-table thead th.sort-asc .sort-icon,
+    .summary-table thead th.sort-desc .sort-icon {{
+        opacity: 1;
     }}
 
     .summary-table tbody tr {{
@@ -611,22 +650,35 @@ def generate_html(all_data):
 
     table_rows = sorted(all_data.items(), key=chg_sort_key, reverse=True)
 
-    table_html = '<div class="summary-table-wrap"><table class="summary-table"><thead><tr>'
-    table_html += '<th>#</th><th>Stock</th><th>Price (₹)</th><th>1D Change</th><th>1W Change</th><th>1M Change</th>'
-    table_html += '</tr></thead><tbody>'
+    table_html = '''<div class="summary-table-wrap"><table class="summary-table" id="summaryTable"><thead><tr>
+        <th>#</th>
+        <th>Stock</th>
+        <th class="sortable" data-col="price" onclick="sortTable(this)">Price (₹)<span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-col="daily" onclick="sortTable(this)">1D Change<span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-col="weekly" onclick="sortTable(this)">1W Change<span class="sort-icon">⇅</span></th>
+        <th class="sortable sort-desc" data-col="monthly" onclick="sortTable(this)">1M Change<span class="sort-icon">▼</span></th>
+    </tr></thead><tbody>'''
+
+    def null_val(v):
+        return "null" if v is None else str(v)
 
     for rank, (stock, data) in enumerate(table_rows, 1):
         pd = data["price"]
         if pd:
-            price_cell = f'<td class="price-cell">₹{pd["price"]}</td>'
-            daily_cell = f'<td>{fmt_badge(pd["daily"])}</td>'
-            weekly_cell = f'<td>{fmt_badge(pd["weekly"])}</td>'
+            price_val  = null_val(pd["price"])
+            daily_val  = null_val(pd["daily"])
+            weekly_val = null_val(pd["weekly"])
+            monthly_val= null_val(pd["monthly"])
+            price_cell   = f'<td class="price-cell">₹{pd["price"]}</td>'
+            daily_cell   = f'<td>{fmt_badge(pd["daily"])}</td>'
+            weekly_cell  = f'<td>{fmt_badge(pd["weekly"])}</td>'
             monthly_cell = f'<td>{fmt_badge(pd["monthly"])}</td>'
         else:
-            price_cell = '<td class="chg-na">N/A</td>'
+            price_val = daily_val = weekly_val = monthly_val = "null"
+            price_cell   = '<td class="chg-na">N/A</td>'
             daily_cell = weekly_cell = monthly_cell = '<td class="chg-na">—</td>'
 
-        table_html += f'''<tr>
+        table_html += f'''<tr data-price="{price_val}" data-daily="{daily_val}" data-weekly="{weekly_val}" data-monthly="{monthly_val}">
             <td><span class="rank-badge">{rank}</span></td>
             <td class="stock-name">{stock}</td>
             {price_cell}{daily_cell}{weekly_cell}{monthly_cell}
@@ -680,11 +732,18 @@ def generate_html(all_data):
                 </div>
             </div>
             """
+            if monthly is None:
+                trend_class = "trend-neutral"
+            elif monthly >= 0:
+                trend_class = "trend-up"
+            else:
+                trend_class = "trend-down"
         else:
             price_html = '<div class="price">N/A</div>'
+            trend_class = "trend-neutral"
 
         html += f"""
-        <div class="stock">
+        <div class="stock {trend_class}">
             <div class="stock-header">
                 <h2>{stock}</h2>
                 {price_html}
@@ -712,6 +771,40 @@ def generate_html(all_data):
 
     html += """
     </div>
+
+    <script>
+    function sortTable(th) {
+        const table = document.getElementById("summaryTable");
+        const tbody = table.querySelector("tbody");
+        const col = th.dataset.col;
+        const isDesc = th.classList.contains("sort-desc");
+        const newDir = isDesc ? "asc" : "desc";
+
+        // Reset all headers
+        table.querySelectorAll("th.sortable").forEach(h => {
+            h.classList.remove("sort-asc", "sort-desc");
+            h.querySelector(".sort-icon").textContent = "⇅";
+        });
+
+        th.classList.add("sort-" + newDir);
+        th.querySelector(".sort-icon").textContent = newDir === "desc" ? "▼" : "▲";
+
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.sort((a, b) => {
+            const av = a.dataset[col];
+            const bv = b.dataset[col];
+            const an = av === "null" ? -Infinity : parseFloat(av);
+            const bn = bv === "null" ? -Infinity : parseFloat(bv);
+            return newDir === "desc" ? bn - an : an - bn;
+        });
+
+        // Re-insert sorted rows and update rank badges
+        rows.forEach((row, i) => {
+            row.querySelector(".rank-badge").textContent = i + 1;
+            tbody.appendChild(row);
+        });
+    }
+    </script>
 
     <script>
     function toggleTheme() {
