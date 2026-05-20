@@ -468,6 +468,118 @@ def generate_html(all_data):
         color: var(--muted);
         font-size: 14px;
     }}
+
+    /* ---- SUMMARY TABLE ---- */
+    .summary-table-wrap {{
+        overflow-x: auto;
+        margin-bottom: 35px;
+    }}
+
+    .summary-table {{
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }}
+
+    .summary-table thead tr {{
+        background: var(--accent);
+        color: #fff;
+        text-align: center;
+        letter-spacing: 0.04em;
+        font-size: 13px;
+        text-transform: uppercase;
+    }}
+
+    .summary-table thead th {{
+        padding: 10px 14px;
+        white-space: nowrap;
+    }}
+
+    .summary-table tbody tr {{
+        border-bottom: 1px solid var(--border);
+        transition: background 0.15s;
+    }}
+
+    .summary-table tbody tr:last-child {{
+        border-bottom: none;
+    }}
+
+    .summary-table tbody tr:hover {{
+        background: var(--border);
+    }}
+
+    .summary-table tbody tr:nth-child(even) {{
+        background: rgba(255,255,255,0.03);
+    }}
+
+    .summary-table td {{
+        padding: 9px 14px;
+        text-align: center;
+        white-space: nowrap;
+    }}
+
+    .summary-table td.stock-name {{
+        text-align: left;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }}
+
+    .summary-table td.price-cell {{
+        font-weight: 600;
+    }}
+
+    .chg-pos {{
+        color: #22c55e;
+        font-weight: 600;
+    }}
+
+    .chg-neg {{
+        color: #ef4444;
+        font-weight: 600;
+    }}
+
+    .chg-na {{
+        color: var(--muted);
+    }}
+
+    .chg-badge {{
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+    }}
+
+    .chg-badge.pos {{
+        background: rgba(34,197,94,0.12);
+        color: #22c55e;
+        font-weight: 700;
+    }}
+
+    .chg-badge.neg {{
+        background: rgba(239,68,68,0.12);
+        color: #ef4444;
+        font-weight: 700;
+    }}
+
+    .chg-badge.na {{
+        color: var(--muted);
+    }}
+
+    .rank-badge {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--border);
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+    }}
     </style>
     </head>
 
@@ -482,6 +594,46 @@ def generate_html(all_data):
 
         <div class="updated">Last updated: {now}</div>
     """
+
+    # ---- SUMMARY TABLE (sorted by monthly change, highest → lowest) ----
+    def chg_sort_key(item):
+        pd = item[1]["price"]
+        if pd and pd["monthly"] is not None:
+            return pd["monthly"]
+        return float('-inf')
+
+    def fmt_badge(val, suffix="%"):
+        if val is None:
+            return '<span class="chg-badge na">N/A</span>'
+        cls = "pos" if val >= 0 else "neg"
+        arrow = "▲" if val >= 0 else "▼"
+        return f'<span class="chg-badge {cls}">{arrow} {val:+.2f}{suffix}</span>'
+
+    table_rows = sorted(all_data.items(), key=chg_sort_key, reverse=True)
+
+    table_html = '<div class="summary-table-wrap"><table class="summary-table"><thead><tr>'
+    table_html += '<th>#</th><th>Stock</th><th>Price (₹)</th><th>1D Change</th><th>1W Change</th><th>1M Change</th>'
+    table_html += '</tr></thead><tbody>'
+
+    for rank, (stock, data) in enumerate(table_rows, 1):
+        pd = data["price"]
+        if pd:
+            price_cell = f'<td class="price-cell">₹{pd["price"]}</td>'
+            daily_cell = f'<td>{fmt_badge(pd["daily"])}</td>'
+            weekly_cell = f'<td>{fmt_badge(pd["weekly"])}</td>'
+            monthly_cell = f'<td>{fmt_badge(pd["monthly"])}</td>'
+        else:
+            price_cell = '<td class="chg-na">N/A</td>'
+            daily_cell = weekly_cell = monthly_cell = '<td class="chg-na">—</td>'
+
+        table_html += f'''<tr>
+            <td><span class="rank-badge">{rank}</span></td>
+            <td class="stock-name">{stock}</td>
+            {price_cell}{daily_cell}{weekly_cell}{monthly_cell}
+        </tr>'''
+
+    table_html += '</tbody></table></div>'
+    html += table_html
 
     def get_latest_news_time(stock_data):
         news = stock_data["news"]
