@@ -27,42 +27,7 @@ DAYS_LIMIT = 7
 
 # ---------------- PRICE ----------------
 def get_stock_data(stock):
-    mapping = {
-    "ANGELONE": "ANGELONE.NS",
-    "ASIANPAINT": "ASIANPAINT.NS",
-    "BAJAJFINANCE": "BAJFINANCE.NS",
-    "COALINDIA": "COALINDIA.NS",
-    "DIVISLAB": "DIVISLAB.NS",
-    "DIXON": "DIXON.NS",
-    "EPIGRAL": "EPIGRAL.NS",
-    "FCL": "FCL.NS",
-    "GAIL": "GAIL.NS",
-    "HDBFS": "HDBFS.NS",
-    "HDFC BANK": "HDFCBANK.NS",
-    "ICICI BANK": "ICICIBANK.NS",
-    "INFOSYS": "INFY.NS",
-    "ITC": "ITC.NS",
-    "KIRLOSENG": "KIRLOSENG.NS",
-    "KOTAKBANK": "KOTAKBANK.NS",
-    "LAURUSLABS": "LAURUSLABS.NS",
-    "MANKIND": "MANKIND.NS",
-    "MARICO": "MARICO.NS",
-    "NTPC": "NTPC.NS",
-    "PETRONET": "PETRONET.NS",
-    "PFC": "PFC.NS",
-    "PIIND": "PIIND.NS",
-    "POLYCAB": "POLYCAB.NS",
-    "POONAWALLA": "POONAWALLA.NS",
-    "RELIANCE": "RELIANCE.NS",
-    "SBIN": "SBIN.NS",
-    "STYLAMIND": "STYLAMIND.NS",
-    "TCS": "TCS.NS",
-    "TMPV": "TMPV.NS",
-    "TMCV": "TMCV.NS",
-    "TRIVENI": "TRIVENI.NS",
-    "VBL": "VBL.NS",
-    "ZENTEC": "ZENTEC.NS",
-}
+    mapping = {s: s.replace(" ", "") + ".NS" for s in STOCKS}
 
     ticker = mapping.get(stock)
     if not ticker:
