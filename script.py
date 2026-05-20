@@ -457,18 +457,9 @@ def generate_html(all_data):
         <div class="updated">Last updated: {now}</div>
     """
 
-    def get_latest_news_time(stock_data):
-    news = stock_data["news"]
-
-    if not news:
-        return datetime(1970, 1, 1, tzinfo=ZoneInfo("Asia/Kolkata"))
-
-    return max(a["date"] for a in news)
-
-
     sorted_items = sorted(
         all_data.items(),
-        key=lambda x: get_latest_news_time(x[1]),
+        key=lambda x: max([a["date"] for a in x[1]["news"]], default=datetime(1970,1,1)),
         reverse=True
     )
 
