@@ -312,10 +312,6 @@ def fetch_news(stock, global_seen_titles):
 
 # ----------- HTML -----------
 
-# (UNCHANGED IMPORTS & ALL ABOVE CODE)
-
-# ----------- HTML -----------
-
 def generate_html(all_data):
     now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%d %b %Y %I:%M %p')
 
@@ -337,6 +333,28 @@ def generate_html(all_data):
         --muted: #94a3b8;
         --accent: #38bdf8;
         --border: #334155;
+    }}
+
+    <script>
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {{
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById("installBtn").style.display = "block";
+    }});
+
+    document.getElementById("installBtn").onclick = async () => {{
+        if (deferredPrompt) {{
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+        }}
+    }};
+    </script>
+
+    .price div {{
+    margin-top: 4px;
+    font-weight: normal;
     }}
 
     body.light {{
@@ -395,9 +413,12 @@ def generate_html(all_data):
         margin-bottom: 10px;
     }}
 
-    .price div {{
-        margin-top: 4px;
-        font-weight: normal;
+    .stock h2 {{
+        margin: 0;
+    }}
+
+    .price {{
+        font-weight: bold;
     }}
 
     .grid {{
@@ -411,6 +432,21 @@ def generate_html(all_data):
         padding: 15px;
         border-radius: 12px;
         border: 1px solid var(--border);
+        transition: 0.2s;
+    }}
+
+    .card:hover {{
+        transform: translateY(-3px);
+    }}
+
+    .card a {{
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 500;
+    }}
+
+    .card a:hover {{
+        color: var(--accent);
     }}
 
     .time {{
@@ -428,20 +464,9 @@ def generate_html(all_data):
         margin-left: 6px;
     }}
 
-    table {{
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 40px;
-    }}
-
-    th, td {{
-        padding: 10px;
-        border: 1px solid var(--border);
-        text-align: center;
-    }}
-
-    th {{
-        background: var(--card);
+    .empty {{
+        color: var(--muted);
+        font-size: 14px;
     }}
     </style>
     </head>
@@ -450,6 +475,7 @@ def generate_html(all_data):
     <div class="container">
 
         <div class="header">
+            <button id="installBtn" style="display:none;">Install App</button>
             <h1>📈 Portfolio Stock News</h1>
             <button onclick="toggleTheme()">Toggle Theme</button>
         </div>
@@ -457,9 +483,23 @@ def generate_html(all_data):
         <div class="updated">Last updated: {now}</div>
     """
 
+    def get_latest_news_time(stock_data):
+        news = stock_data["news"]
+        if not news:
+            return datetime(1970, 1, 1, tzinfo=ZoneInfo("Asia/Kolkata"))
+
+        def normalize(dt):
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
+            return dt
+
+        return max(normalize(article["date"]) for article in news)
+
+
+    # SORT STOCKS HERE
     sorted_items = sorted(
         all_data.items(),
-        key=lambda x: max([a["date"] for a in x[1]["news"]], default=datetime(1970,1,1)),
+        key=lambda x: get_latest_news_time(x[1]),
         reverse=True
     )
 
@@ -468,13 +508,23 @@ def generate_html(all_data):
         price_data = data["price"]
 
         if price_data:
+            price = price_data["price"]
+            daily = price_data["daily"]
+            weekly = price_data["weekly"]
+            monthly = price_data["monthly"]
+
+            def get_color(val):
+                if val is None:
+                    return "#94a3b8"  # muted
+                return "#22c55e" if val >= 0 else "#ef4444"
+
             price_html = f"""
             <div class="price">
-                ₹{price_data["price"]}
+                ₹{price}
                 <div style="font-size:12px;">
-                    1D: {price_data["daily"]}% |
-                    1W: {price_data["weekly"] if price_data["weekly"] else 'N/A'}% |
-                    1M: {price_data["monthly"] if price_data["monthly"] else 'N/A'}%
+                    <span style="color:{get_color(daily)}">1D: {daily}%</span> |
+                    <span style="color:{get_color(weekly)}">1W: {weekly if weekly is not None else 'N/A'}%</span> |
+                    <span style="color:{get_color(monthly)}">1M: {monthly if monthly is not None else 'N/A'}%</span>
                 </div>
             </div>
             """
@@ -495,6 +545,7 @@ def generate_html(all_data):
         else:
             for a in articles:
                 time_str = a["date"].strftime('%d %b %I:%M %p')
+
                 html += f"""
                 <div class="card">
                     <a href="{a['link']}" target="_blank">{a['title']}</a>
@@ -507,48 +558,90 @@ def generate_html(all_data):
 
         html += "</div></div>"
 
-    # ----------- STOCK TABLE ADDED HERE -----------
-    html += """
-    <h2 style="margin-top:40px;">📊 Stock Price Summary</h2>
-    <table>
-        <tr>
-            <th>Stock</th>
-            <th>Price</th>
-            <th>1D %</th>
-            <th>1W %</th>
-            <th>1M %</th>
-        </tr>
-    """
-
-    for stock, data in all_data.items():
-        p = data["price"]
-        if p:
-            html += f"""
-            <tr>
-                <td>{stock}</td>
-                <td>₹{p['price']}</td>
-                <td>{p['daily']}</td>
-                <td>{p['weekly'] if p['weekly'] else 'N/A'}</td>
-                <td>{p['monthly'] if p['monthly'] else 'N/A'}</td>
-            </tr>
-            """
-        else:
-            html += f"""
-            <tr>
-                <td>{stock}</td>
-                <td colspan="4">N/A</td>
-            </tr>
-            """
-
-    html += "</table>"
-
     html += """
     </div>
 
     <script>
     function toggleTheme() {
         document.body.classList.toggle("light");
+        localStorage.setItem("theme",
+            document.body.classList.contains("light") ? "light" : "dark"
+        );
     }
+
+    window.onload = function() {
+        const saved = localStorage.getItem("theme");
+        if (saved === "light") {
+            document.body.classList.add("light");
+        }
+    }
+    </script>
+
+    <script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js");
+    }
+    </script>
+
+    <script>
+    // --- AUTO REFRESH EVERY 2 HOURS ---
+    setTimeout(() => {
+        location.reload();
+    }, 2 * 60 * 60 * 1000);
+
+
+    // --- FAKE NOTIFICATION SYSTEM ---
+    function getCurrentTitles() {
+        return Array.from(document.querySelectorAll(".card a"))
+            .map(a => a.innerText.trim());
+    }
+
+    function showNotification(count) {
+        const div = document.createElement("div");
+        div.innerText = `🔔 ${count} new updates available`;
+        
+        div.style.position = "fixed";
+        div.style.top = "10px";
+        div.style.left = "50%";
+        div.style.transform = "translateX(-50%)";
+        div.style.background = "#22c55e";
+        div.style.color = "white";
+        div.style.padding = "10px 16px";
+        div.style.borderRadius = "8px";
+        div.style.zIndex = "9999";
+        div.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
+        
+        document.body.appendChild(div);
+
+        setTimeout(() => div.remove(), 5000);
+    }
+
+    function highlightNew(seenSet) {
+        document.querySelectorAll(".card").forEach(card => {
+            const title = card.querySelector("a").innerText.trim();
+
+            if (!seenSet.has(title)) {
+                card.style.border = "1px solid #22c55e";
+                card.style.boxShadow = "0 0 10px rgba(34,197,94,0.5)";
+            }
+        });
+    }
+
+    window.addEventListener("load", () => {
+        const current = getCurrentTitles();
+        const previous = JSON.parse(localStorage.getItem("seenTitles") || "[]");
+
+        const prevSet = new Set(previous);
+
+        const newItems = current.filter(t => !prevSet.has(t));
+
+        if (previous.length > 0 && newItems.length > 0) {
+            showNotification(newItems.length);
+            highlightNew(prevSet);
+        }
+
+        localStorage.setItem("seenTitles", JSON.stringify(current));
+    });
     </script>
 
     </body>
@@ -556,9 +649,6 @@ def generate_html(all_data):
     """
 
     return html
-
-
-# ----------- MAIN (UNCHANGED) -----------
 
 
 # ----------- MAIN -----------
