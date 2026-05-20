@@ -463,13 +463,7 @@ def generate_html(all_data):
     if not news:
         return datetime(1970, 1, 1, tzinfo=ZoneInfo("Asia/Kolkata"))
 
-    latest = news[0]["date"]
-
-    # Ensure ALL dates are timezone-aware
-    if latest.tzinfo is None:
-        latest = latest.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
-
-    return latest
+    return max(a["date"] for a in news)
 
 
     sorted_items = sorted(
