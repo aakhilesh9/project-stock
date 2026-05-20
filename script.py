@@ -485,6 +485,7 @@ def generate_html(all_data):
 
     def get_latest_news_time(stock_data):
         news = stock_data["news"]
+
         if not news:
             return datetime(1970, 1, 1, tzinfo=ZoneInfo("Asia/Kolkata"))
 
@@ -493,10 +494,9 @@ def generate_html(all_data):
                 return dt.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
             return dt
 
-        return max(normalize(article["date"]) for article in news)
+        return max(normalize(a["date"]) for a in news)
 
 
-    # SORT STOCKS HERE
     sorted_items = sorted(
         all_data.items(),
         key=lambda x: get_latest_news_time(x[1]),
@@ -558,6 +558,38 @@ def generate_html(all_data):
 
         html += "</div></div>"
 
+    # ✅ ADD TABLE HERE (OUTSIDE LOOP)
+    html += """
+    <h2 style="margin-top:40px;">📊 Stock Price Summary</h2>
+    <table style="width:100%;border-collapse:collapse;">
+    <tr>
+    <th>Stock</th><th>Price</th><th>1D</th><th>1W</th><th>1M</th>
+    </tr>
+    """
+
+    for stock, data in all_data.items():
+        p = data["price"]
+
+        if p:
+            html += f"""
+            <tr>
+                <td>{stock}</td>
+                <td>₹{p['price']}</td>
+                <td>{p['daily']}</td>
+                <td>{p['weekly'] if p['weekly'] is not None else 'N/A'}</td>
+                <td>{p['monthly'] if p['monthly'] is not None else 'N/A'}</td>
+            </tr>
+            """
+        else:
+            html += f"""
+            <tr>
+                <td>{stock}</td>
+                <td colspan="4">N/A</td>
+            </tr>
+            """
+
+    html += "</table>"
+
     html += """
     </div>
 
@@ -589,39 +621,6 @@ def generate_html(all_data):
         location.reload();
     }, 2 * 60 * 60 * 1000);
 
-
-    // --- FAKE NOTIFICATION SYSTEM ---
-    function getCurrentTitles() {
-        return Array.from(document.querySelectorAll(".card a"))
-            .map(a => a.innerText.trim());
-    }
-
-    function highlightNew(seenSet) {
-        document.querySelectorAll(".card").forEach(card => {
-            const title = card.querySelector("a").innerText.trim();
-
-            if (!seenSet.has(title)) {
-                card.style.border = "1px solid #22c55e";
-                card.style.boxShadow = "0 0 10px rgba(34,197,94,0.5)";
-            }
-        });
-    }
-
-    window.addEventListener("load", () => {
-        const current = getCurrentTitles();
-        const previous = JSON.parse(localStorage.getItem("seenTitles") || "[]");
-
-        const prevSet = new Set(previous);
-
-        const newItems = current.filter(t => !prevSet.has(t));
-
-        if (previous.length > 0 && newItems.length > 0) {
-            showNotification(newItems.length);
-            highlightNew(prevSet);
-        }
-
-        localStorage.setItem("seenTitles", JSON.stringify(current));
-    });
     </script>
 
     </body>
