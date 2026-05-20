@@ -335,36 +335,6 @@ def generate_html(all_data):
         --border: #334155;
     }}
 
-    table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 40px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    }
-
-    th, td {
-        padding: 10px;
-        text-align: center;
-        border-bottom: 1px solid var(--border);
-    }
-
-    th {
-        background: var(--card);
-        color: var(--accent);
-        font-weight: 600;
-    }
-
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    tr:hover {
-        background: rgba(255,255,255,0.03);
-    }
-
     <script>
     let deferredPrompt;
 
@@ -597,12 +567,6 @@ def generate_html(all_data):
     </tr>
     """
 
-    def get_color(val):
-    if val is None:
-        return "#94a3b8"
-    return "#22c55e" if val >= 0 else "#ef4444"
-
-
     for stock, data in all_data.items():
         p = data["price"]
 
@@ -611,25 +575,18 @@ def generate_html(all_data):
             <tr>
                 <td>{stock}</td>
                 <td>₹{p['price']}</td>
-                <td style="color:{get_color(p['daily'])}">{p['daily']}%</td>
-                <td style="color:{get_color(p['weekly'])}">{p['weekly'] if p['weekly'] is not None else 'N/A'}%</td>
-                <td style="color:{get_color(p['monthly'])}">{p['monthly'] if p['monthly'] is not None else 'N/A'}%</td>
+                <td>{p['daily']}</td>
+                <td>{p['weekly'] if p['weekly'] is not None else 'N/A'}</td>
+                <td>{p['monthly'] if p['monthly'] is not None else 'N/A'}</td>
             </tr>
             """
         else:
             html += f"""
             <tr>
                 <td>{stock}</td>
-                <td colspan="4" style="color:#94a3b8;">N/A</td>
+                <td colspan="4">N/A</td>
             </tr>
             """
-            else:
-                html += f"""
-                <tr>
-                    <td>{stock}</td>
-                    <td colspan="4">N/A</td>
-                </tr>
-                """
 
     html += "</table>"
 
