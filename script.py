@@ -596,26 +596,6 @@ def generate_html(all_data):
             .map(a => a.innerText.trim());
     }
 
-    function showNotification(count) {
-        const div = document.createElement("div");
-        div.innerText = `🔔 ${count} new updates available`;
-        
-        div.style.position = "fixed";
-        div.style.top = "10px";
-        div.style.left = "50%";
-        div.style.transform = "translateX(-50%)";
-        div.style.background = "#22c55e";
-        div.style.color = "white";
-        div.style.padding = "10px 16px";
-        div.style.borderRadius = "8px";
-        div.style.zIndex = "9999";
-        div.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
-        
-        document.body.appendChild(div);
-
-        setTimeout(() => div.remove(), 5000);
-    }
-
     function highlightNew(seenSet) {
         document.querySelectorAll(".card").forEach(card => {
             const title = card.querySelector("a").innerText.trim();
