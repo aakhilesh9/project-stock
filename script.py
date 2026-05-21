@@ -62,7 +62,7 @@ STOCK_KEYWORDS = {
     
     "EPIGRAL": ["epigral", "epigral ltd"],
     
-    "FCL": ["fineotex", "fineotex chemical", "fcl stock", "fineotex share"],
+    "FCL": ["fineotex", "fineotex chemical", "fineotex share"],
     
     "GAIL": ["gail", "gail india", "Gas authority of India"],
     
@@ -894,7 +894,8 @@ def generate_html(all_data):
     }, 2 * 60 * 60 * 1000);
 
 
-    // --- FAKE NOTIFICATION SYSTEM ---
+    // --- REAL BROWSER NOTIFICATION SYSTEM ---
+
     function getCurrentTitles() {
         return Array.from(document.querySelectorAll(".card a"))
             .map(a => a.innerText.trim());
@@ -903,7 +904,6 @@ def generate_html(all_data):
     function highlightNew(seenSet) {
         document.querySelectorAll(".card").forEach(card => {
             const title = card.querySelector("a").innerText.trim();
-
             if (!seenSet.has(title)) {
                 card.style.border = "1px solid #22c55e";
                 card.style.boxShadow = "0 0 10px rgba(34,197,94,0.5)";
@@ -911,21 +911,55 @@ def generate_html(all_data):
         });
     }
 
-    window.addEventListener("load", () => {
+    function fireNotification(newItems) {
+        if (!("Notification" in window)) return;
+
+        const send = () => {{
+            // One grouped notification summarising all new articles
+            const n = new Notification("📈 Portfolio News Update", {{
+                body: newItems.length === 1
+                    ? newItems[0]
+                    : `${{newItems.length}} new articles — ${{newItems[0]}} …`,
+                icon: "https://cdn-icons-png.flaticon.com/512/2103/2103633.png",
+                tag: "portfolio-news",   // replaces previous notification instead of stacking
+                renotify: true
+            }});
+            // Clicking the notification focuses this tab
+            n.onclick = () => {{ window.focus(); n.close(); }};
+        }};
+
+        if (Notification.permission === "granted") {{
+            send();
+        }} else if (Notification.permission === "default") {{
+            Notification.requestPermission().then(perm => {{
+                if (perm === "granted") send();
+            }});
+        }}
+        // If permission === "denied" — silently skip, nothing we can do
+    }}
+
+    // Request permission early (on first load) so it's ready before the next refresh
+    function requestPermissionEarly() {{
+        if ("Notification" in window && Notification.permission === "default") {{
+            Notification.requestPermission();
+        }}
+    }}
+
+    window.addEventListener("load", () => {{
+        requestPermissionEarly();
+
         const current = getCurrentTitles();
         const previous = JSON.parse(localStorage.getItem("seenTitles") || "[]");
-
         const prevSet = new Set(previous);
-
         const newItems = current.filter(t => !prevSet.has(t));
 
-        if (previous.length > 0 && newItems.length > 0) {
-            showNotification(newItems.length);
+        if (previous.length > 0 && newItems.length > 0) {{
+            fireNotification(newItems);
             highlightNew(prevSet);
-        }
+        }}
 
         localStorage.setItem("seenTitles", JSON.stringify(current));
-    });
+    }});
     </script>
 
     </body>
