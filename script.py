@@ -619,6 +619,62 @@ def generate_html(all_data):
         color: var(--muted);
         font-weight: 600;
     }}
+
+    @media (max-width: 480px) and (orientation: portrait) {{
+        .summary-table-wrap {{
+            overflow-x: visible;
+        }}
+
+        .summary-table {{
+            font-size: 11px;
+            table-layout: fixed;
+            width: 100%;
+        }}
+
+        /* col widths: # | Stock | Price | 1D | 1W | 1M */
+        .summary-table colgroup col:nth-child(1) {{ width: 28px; }}
+        .summary-table colgroup col:nth-child(2) {{ width: 22%; }}
+        .summary-table colgroup col:nth-child(3) {{ width: 16%; }}
+        .summary-table colgroup col:nth-child(4) {{ width: 18%; }}
+        .summary-table colgroup col:nth-child(5) {{ width: 18%; }}
+        .summary-table colgroup col:nth-child(6) {{ width: 18%; }}
+
+        .summary-table thead tr {{
+            font-size: 9px;
+            letter-spacing: 0;
+        }}
+
+        .summary-table thead th {{
+            padding: 7px 3px;
+        }}
+
+        .summary-table td {{
+            padding: 6px 3px;
+            white-space: normal;
+            word-break: break-word;
+        }}
+
+        .summary-table td.stock-name {{
+            font-size: 10px;
+            letter-spacing: 0;
+        }}
+
+        .chg-badge {{
+            padding: 1px 4px;
+            font-size: 10px;
+            border-radius: 4px;
+        }}
+
+        .rank-badge {{
+            width: 18px;
+            height: 18px;
+            font-size: 9px;
+        }}
+
+        .summary-table thead th .sort-icon {{
+            display: none;
+        }}
+    }}
     </style>
     </head>
 
@@ -650,7 +706,9 @@ def generate_html(all_data):
 
     table_rows = sorted(all_data.items(), key=chg_sort_key, reverse=True)
 
-    table_html = '''<div class="summary-table-wrap"><table class="summary-table" id="summaryTable"><thead><tr>
+    table_html = '''<div class="summary-table-wrap"><table class="summary-table" id="summaryTable">
+    <colgroup><col><col><col><col><col><col></colgroup>
+    <thead><tr>
         <th>#</th>
         <th>Stock</th>
         <th class="sortable" data-col="price" onclick="sortTable(this)">Price (₹)<span class="sort-icon">⇅</span></th>
