@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import quote_plus
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import yfinance as yf
 from rapidfuzz.fuzz import ratio
 from dateutil import parser as dateparser
@@ -938,17 +939,29 @@ def generate_html(all_data):
 
 def main():
     all_data = {}
-
     global_seen_titles = []
 
-    for stock in STOCKS:
-        print(f"Fetching {stock}...")
-        news = fetch_news(stock, global_seen_titles)
-        price = get_stock_data(stock)
+    # --- PHASE 1: Fetch all prices concurrently (yfinance / Yahoo Finance, safe to parallelise) ---
+    print(f"Fetching prices for {len(STOCKS)} stocks concurrently...")
+    prices = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_stock = {executor.submit(get_stock_data, stock): stock for stock in STOCKS}
+        for future in as_completed(future_to_stock):
+            stock = future_to_stock[future]
+            try:
+                prices[stock] = future.result()
+            except Exception as e:
+                print(f"  Price fetch failed for {stock}: {e}")
+                prices[stock] = None
+    print(f"  Prices fetched.")
 
+    # --- PHASE 2: Fetch news sequentially (Google News RSS is rate-sensitive) ---
+    for stock in STOCKS:
+        print(f"Fetching news: {stock}...")
+        news = fetch_news(stock, global_seen_titles)
         all_data[stock] = {
             "news": news,
-            "price": price
+            "price": prices.get(stock)
         }
 
     html = generate_html(all_data)
