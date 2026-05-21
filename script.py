@@ -55,15 +55,15 @@ STOCK_KEYWORDS = {
     
     "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
     
-    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"],
+    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share", "divi"],
     
     "DIXON": ["dixon","dixon technologies", "dixon tech"],
     
     "EPIGRAL": ["epigral", "epigral ltd"],
     
-    "FCL": ["fcl","fineotex", "fineotex chemical", "fcl stock", "fineotex share"],
+    "FCL": ["fineotex", "fineotex chemical", "fcl stock", "fineotex share"],
     
-    "GAIL": ["gail", "gail india"],
+    "GAIL": ["gail", "gail india", "Gas authority of India"],
     
     "HDBFS":["hdbfs","HDB Financial", "hdfc financial"],
 
@@ -73,7 +73,7 @@ STOCK_KEYWORDS = {
     
     "INFOSYS": ["infosys", "infy"],
     
-    "ITC": ["itc"],
+    "ITC": ["itc", "itc stock","itc share"],
     
     "KIRLOSENG": ["kirloseng","kirloskar oil", "kirloskar oil engines"],
     
@@ -109,11 +109,11 @@ STOCK_KEYWORDS = {
 
     "TMCV": ["Tata motors", "TMCV"],
 
-    "TRIVENI": ["triveni turbine", "triveni"],
+    "TRIVENI": ["triveni engg", "triveni engineering"],
     
     "VBL": ["varun beverages", "vbl"],
     
-    "ZENTEC": ["zen technologies", "zen tech", "zentech"]
+    "ZENTEC": ["zen technologies", "zen tech", "zentech", "zentec", "zentec.ns"]
 }
 
 # ----------- PRICE FETCH -----------
