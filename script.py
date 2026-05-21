@@ -56,7 +56,7 @@ STOCK_KEYWORDS = {
     
     "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
     
-    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share", "divi"],
+    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"],
     
     "DIXON": ["dixon","dixon technologies", "dixon tech"],
     
@@ -100,7 +100,7 @@ STOCK_KEYWORDS = {
     
     "RELIANCE": ["reliance", "ril", "mukesh ambani"],
     
-    "SBIN": ["sbi", "state bank of india"],
+    "SBIN": ["sbin", "state bank of india"],
     
     "STYLAMIND": ["stylamind","stylam industries", "stylam"],
     
@@ -114,7 +114,7 @@ STOCK_KEYWORDS = {
     
     "VBL": ["varun beverages", "vbl"],
     
-    "ZENTEC": ["zen technologies", "zen tech", "zentech", "zentec", "zentec.ns"]
+    "ZENTEC": ["zen technologies", "zen tech", "zentech", "zentec", "zentec.ns", "ZEN Technologies Ltd"]
 }
 
 # ----------- PRICE FETCH -----------
