@@ -3,17 +3,15 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import quote_plus
 import os
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import yfinance as yf
 from rapidfuzz.fuzz import ratio
 from dateutil import parser as dateparser
+import http.server
+import socketserver
 
-STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
-          "DIXON", "EPIGRAL", "FCL", "GAIL", "HDBFS", "HDFC BANK",
-          "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
-          "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
-          "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
-          "SBIN", "STYLAMIND", "TCS", "TMPV", "TMCV", "TRIVENI", "VBL", "ZENTEC"]
+STOCKS_FILE = "stocks.json"
 
 # ----------- RSS SOURCES (PRIORITY ORDER) -----------
 RSS_SOURCES = [
@@ -47,123 +45,61 @@ SIMILARITY_THRESHOLD = 70
 MAX_NEWS = 7
 DAYS_LIMIT = 7
 
-STOCK_KEYWORDS = {
-    "ANGELONE": ["angel one", "angelone", "angel broking"],
-    
-    "ASIANPAINT": ["asianpain","asian paints", "Asian paint stock", "asian paints share"],
-    
-    "BAJAJFINANCE": ["bajajfinance","bajaj finance", "BAJAJFINANCE stock"],
-    
-    "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
-    
-    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"],
-    
-    "DIXON": ["dixon","dixon technologies", "dixon tech"],
-    
-    "EPIGRAL": ["epigral", "epigral ltd"],
-    
-    "FCL": ["fineotex", "fineotex chemical", "fineotex share"],
-    
-    "GAIL": ["gail", "gail india", "Gas authority of India"],
-    
-    "HDBFS":["hdbfs","HDB Financial", "hdfc financial"],
-
-    "HDFC BANK": ["hdfc bank", "hdfc"],
-    
-    "ICICI BANK": ["icici bank", "icici"],
-    
-    "INFOSYS": ["infosys", "infy"],
-    
-    "ITC": ["itc", "itc stock","itc share"],
-    
-    "KIRLOSENG": ["kirloseng","kirloskar oil", "kirloskar oil engines"],
-    
-    "KOTAKBANK": ["kotakbank","kotak bank", "kotak mahindra bank", "kotak"],
-    
-    "LAURUSLABS": ["laurus labs", "laurus", "lauruslabs"],
-    
-    "MANKIND": ["mankind pharma", "mankind"],
-    
-    "MARICO": ["marico"],
-    
-    "NTPC": ["ntpc"],
-    
-    "PETRONET": ["petronet lng", "petronet"],
-    
-    "PFC": ["power finance corporation", "pfc"],
-    
-    "PIIND": ["P I industries","pi industries", "pi ind"],
-    
-    "POLYCAB": ["polycab"],
-    
-    "POONAWALLA": ["poonawalla fincorp", "poonawalla"],
-    
-    "RELIANCE": ["reliance", "ril", "mukesh ambani"],
-    
-    "SBIN": ["sbin", "state bank of india"],
-    
-    "STYLAMIND": ["stylamind","stylam industries", "stylam"],
-    
-    "TCS": ["tcs", "tata consultancy services"],
-    
-    "TMPV":["Tata motors", "TPMV"],
-
-    "TMCV": ["Tata motors", "TMCV"],
-
-    "TRIVENI": ["triveni engg", "triveni engineering"],
-    
-    "VBL": ["varun beverages", "vbl"],
-    
-    "ZENTEC": ["zen technologies", "zen tech", "zentech", "zentec", "zentec.ns", "ZEN Technologies Ltd"]
+# Global state to keep the web server updated
+app_data = {
+    "all_data": {},
+    "global_seen_titles": []
 }
+
+# ----------- STOCK STORAGE HELPERS -----------
+
+def load_stocks():
+    if not os.path.exists(STOCKS_FILE):
+        return []
+    try:
+        with open(STOCKS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading {STOCKS_FILE}: {e}")
+        return []
+
+def save_stocks(stocks):
+    try:
+        with open(STOCKS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(stocks, f, indent=4)
+    except Exception as e:
+        print(f"Error saving {STOCKS_FILE}: {e}")
+
+def add_stock(name, ticker):
+    stocks = load_stocks()
+    
+    if not name or not ticker:
+        raise ValueError("Company name and ticker cannot be empty.")
+    
+    ticker_upper = ticker.upper()
+    
+    # Duplicate Check
+    if any(s['ticker'].upper() == ticker_upper for s in stocks):
+        raise ValueError(f"Stock with ticker {ticker_upper} already exists.")
+    
+    new_stock = {
+        "name": name,
+        "ticker": ticker_upper,
+        "keywords": [name.lower(), ticker_upper.lower()]
+    }
+    stocks.append(new_stock)
+    save_stocks(stocks)
+    return new_stock
+
 
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
-    mapping = {
-        "ANGELONE": "ANGELONE.NS",
-        "ASIANPAINT": "ASIANPAINT.NS",
-        "BAJAJFINANCE": "BAJFINANCE.NS",
-        "COALINDIA": "COALINDIA.NS",
-        "DIVISLAB": "DIVISLAB.NS",
-        "DIXON": "DIXON.NS",
-        "EPIGRAL": "EPIGRAL.NS",
-        "FCL": "FCL.NS",
-        "GAIL": "GAIL.NS",
-        "HDBFS": "HDBFS.NS",
-        "HDFC BANK": "HDFCBANK.NS",
-        "ICICI BANK": "ICICIBANK.NS",
-        "INFOSYS": "INFY.NS",
-        "ITC": "ITC.NS",
-        "KIRLOSENG": "KIRLOSENG.NS",
-        "KOTAKBANK": "KOTAKBANK.NS",
-        "LAURUSLABS": "LAURUSLABS.NS",
-        "MANKIND": "MANKIND.NS",
-        "MARICO": "MARICO.NS",
-        "NTPC": "NTPC.NS",
-        "PETRONET": "PETRONET.NS",
-        "PFC": "PFC.NS",
-        "PIIND": "PIIND.NS",
-        "POLYCAB": "POLYCAB.NS",
-        "POONAWALLA": "POONAWALLA.NS",
-        "RELIANCE": "RELIANCE.NS",
-        "SBIN": "SBIN.NS",
-        "STYLAMIND": "STYLAMIND.NS",
-        "TCS": "TCS.NS",
-        "TMCV": "TMCV.NS",
-        "TMPV": "TMPV.NS",
-        "TRIVENI": "TRIVENI.NS",
-        "VBL": "VBL.NS",
-        "ZENTEC": "ZENTEC.NS",
-    }
-
-    ticker = mapping.get(stock)
+    ticker = stock.get("ticker")
     if not ticker:
         return None
 
     try:
         data = yf.Ticker(ticker)
-
-        # Fetch multiple periods
         hist_1d = data.history(period="1d")
         hist_1mo = data.history(period="1mo")
         hist_3mo = data.history(period="3mo")
@@ -171,20 +107,16 @@ def get_stock_data(stock):
         if hist_1d.empty or hist_1mo.empty:
             return None
 
-        # --- Current price ---
         close = hist_1d["Close"].iloc[-1]
         open_ = hist_1d["Open"].iloc[-1]
-
         daily_change = ((close - open_) / open_) * 100
 
-        # --- Weekly change (last 5 trading days) ---
         if len(hist_1mo) >= 5:
             week_ago = hist_1mo["Close"].iloc[-5]
             weekly_change = ((close - week_ago) / week_ago) * 100
         else:
             weekly_change = None
 
-        # --- Monthly change (last ~21 trading days) ---
         if len(hist_3mo) >= 21:
             month_ago = hist_3mo["Close"].iloc[-21]
             monthly_change = ((close - month_ago) / month_ago) * 100
@@ -199,13 +131,13 @@ def get_stock_data(stock):
         }
 
     except Exception as e:
+        print(f"yfinance failed for {ticker}: {e}")
         return None
 
 
 # ----------- NEWS HELPERS -----------
-
 def get_google_news_rss(stock):
-    query = quote_plus(f"{stock} stock")
+    query = quote_plus(f"{stock['name']} stock")
     return f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
 
 
@@ -231,32 +163,26 @@ def is_duplicate(title, existing_titles):
     return False
 
 # ----------- RELEVANCE FILTER -----------
-
 import re
 
 def normalize(text):
     text = text.lower()
-    text = re.sub(r'[^a-z0-9 ]', ' ', text)   # remove punctuation
-    text = text.replace(" ", "")              # remove spaces
+    text = re.sub(r'[^a-z0-9 ]', ' ', text)
+    text = text.replace(" ", "")
     return text
-
 
 def is_relevant_to_stock(title, stock):
     title_norm = normalize(title)
-
-    keywords = STOCK_KEYWORDS.get(stock, [stock])
+    keywords = stock.get("keywords", [stock["name"]])
 
     for kw in keywords:
         if normalize(kw) in title_norm:
             return True
-
     return False
 
 # ----------- NEWS FETCH -----------
-
 def fetch_news(stock, global_seen_titles):
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
-
     collected = []
     titles = []
 
@@ -276,7 +202,7 @@ def fetch_news(stock, global_seen_titles):
                 break
 
             title = entry.title.strip()
-            # ---- RELEVANCE FILTER ----
+            
             if not is_relevant_to_stock(title, stock):
                 continue
 
@@ -289,11 +215,9 @@ def fetch_news(stock, global_seen_titles):
             if not is_recent(dt, now):
                 continue
 
-            # Local duplicate
             if is_duplicate(title, titles):
                 continue
 
-            # Global duplicate (across stocks)
             if is_duplicate(title, global_seen_titles):
                 continue
 
@@ -338,7 +262,6 @@ def generate_html(all_data):
 
     <script>
     let deferredPrompt;
-
     window.addEventListener('beforeinstallprompt', (e) => {{
         e.preventDefault();
         deferredPrompt = e;
@@ -411,17 +334,9 @@ def generate_html(all_data):
         transition: border-color 0.2s;
     }}
 
-    .stock.trend-up {{
-        border-left-color: #22c55e;
-    }}
-
-    .stock.trend-down {{
-        border-left-color: #ef4444;
-    }}
-
-    .stock.trend-neutral {{
-        border-left-color: #94a3b8;
-    }}
+    .stock.trend-up {{ border-left-color: #22c55e; }}
+    .stock.trend-down {{ border-left-color: #ef4444; }}
+    .stock.trend-neutral {{ border-left-color: #94a3b8; }}
 
     .stock-header {{
         display: flex;
@@ -430,13 +345,8 @@ def generate_html(all_data):
         margin-bottom: 10px;
     }}
 
-    .stock h2 {{
-        margin: 0;
-    }}
-
-    .price {{
-        font-weight: bold;
-    }}
+    .stock h2 {{ margin: 0; }}
+    .price {{ font-weight: bold; }}
 
     .grid {{
         display: grid;
@@ -452,9 +362,7 @@ def generate_html(all_data):
         transition: 0.2s;
     }}
 
-    .card:hover {{
-        transform: translateY(-3px);
-    }}
+    .card:hover {{ transform: translateY(-3px); }}
 
     .card a {{
         color: var(--text);
@@ -462,9 +370,7 @@ def generate_html(all_data):
         font-weight: 500;
     }}
 
-    .card a:hover {{
-        color: var(--accent);
-    }}
+    .card a:hover {{ color: var(--accent); }}
 
     .time {{
         font-size: 12px;
@@ -481,16 +387,10 @@ def generate_html(all_data):
         margin-left: 6px;
     }}
 
-    .empty {{
-        color: var(--muted);
-        font-size: 14px;
-    }}
+    .empty {{ color: var(--muted); font-size: 14px; }}
 
     /* ---- SUMMARY TABLE ---- */
-    .summary-table-wrap {{
-        overflow-x: auto;
-        margin-bottom: 35px;
-    }}
+    .summary-table-wrap {{ overflow-x: auto; margin-bottom: 35px; }}
 
     .summary-table {{
         width: 100%;
@@ -516,165 +416,48 @@ def generate_html(all_data):
         cursor: default;
     }}
 
-    .summary-table thead th.sortable {{
-        cursor: pointer;
-        user-select: none;
-    }}
-
-    .summary-table thead th.sortable:hover {{
-        background: rgba(255,255,255,0.15);
-    }}
-
+    .summary-table thead th.sortable {{ cursor: pointer; user-select: none; }}
+    .summary-table thead th.sortable:hover {{ background: rgba(255,255,255,0.15); }}
+    
     .summary-table thead th .sort-icon {{
-        display: inline-block;
-        margin-left: 5px;
-        opacity: 0.4;
-        font-size: 11px;
-        transition: opacity 0.15s;
+        display: inline-block; margin-left: 5px; opacity: 0.4; font-size: 11px; transition: opacity 0.15s;
     }}
 
     .summary-table thead th.sort-asc .sort-icon,
-    .summary-table thead th.sort-desc .sort-icon {{
-        opacity: 1;
-    }}
+    .summary-table thead th.sort-desc .sort-icon {{ opacity: 1; }}
 
     .summary-table tbody tr {{
         border-bottom: 1px solid var(--border);
         transition: background 0.15s;
     }}
-
-    .summary-table tbody tr:last-child {{
-        border-bottom: none;
-    }}
-
-    .summary-table tbody tr:hover {{
-        background: var(--border);
-    }}
-
-    .summary-table tbody tr:nth-child(even) {{
-        background: rgba(255,255,255,0.03);
-    }}
+    .summary-table tbody tr:last-child {{ border-bottom: none; }}
+    .summary-table tbody tr:hover {{ background: var(--border); }}
+    .summary-table tbody tr:nth-child(even) {{ background: rgba(255,255,255,0.03); }}
 
     .summary-table td {{
-        padding: 9px 14px;
-        text-align: center;
-        white-space: nowrap;
+        padding: 9px 14px; text-align: center; white-space: nowrap;
     }}
-
     .summary-table td.stock-name {{
-        text-align: left;
-        font-weight: 600;
-        letter-spacing: 0.02em;
+        text-align: left; font-weight: 600; letter-spacing: 0.02em;
     }}
+    .summary-table td.price-cell {{ font-weight: 600; }}
 
-    .summary-table td.price-cell {{
-        font-weight: 600;
-    }}
-
-    .chg-pos {{
-        color: #22c55e;
-        font-weight: 600;
-    }}
-
-    .chg-neg {{
-        color: #ef4444;
-        font-weight: 600;
-    }}
-
-    .chg-na {{
-        color: var(--muted);
-    }}
+    .chg-pos {{ color: #22c55e; font-weight: 600; }}
+    .chg-neg {{ color: #ef4444; font-weight: 600; }}
+    .chg-na {{ color: var(--muted); }}
 
     .chg-badge {{
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 6px;
-        font-size: 13px;
+        display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 13px;
     }}
 
-    .chg-badge.pos {{
-        background: rgba(34,197,94,0.12);
-        color: #22c55e;
-        font-weight: 700;
-    }}
-
-    .chg-badge.neg {{
-        background: rgba(239,68,68,0.12);
-        color: #ef4444;
-        font-weight: 700;
-    }}
-
-    .chg-badge.na {{
-        color: var(--muted);
-    }}
+    .chg-badge.pos {{ background: rgba(34,197,94,0.12); color: #22c55e; font-weight: 700; }}
+    .chg-badge.neg {{ background: rgba(239,68,68,0.12); color: #ef4444; font-weight: 700; }}
+    .chg-badge.na {{ color: var(--muted); }}
 
     .rank-badge {{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: var(--border);
-        font-size: 11px;
-        color: var(--muted);
-        font-weight: 600;
-    }}
-
-    @media (max-width: 480px) and (orientation: portrait) {{
-        .summary-table-wrap {{
-            overflow-x: visible;
-        }}
-
-        .summary-table {{
-            font-size: 11px;
-            table-layout: fixed;
-            width: 100%;
-        }}
-
-        /* col widths: # | Stock | Price | 1D | 1W | 1M */
-        .summary-table colgroup col:nth-child(1) {{ width: 28px; }}
-        .summary-table colgroup col:nth-child(2) {{ width: 22%; }}
-        .summary-table colgroup col:nth-child(3) {{ width: 16%; }}
-        .summary-table colgroup col:nth-child(4) {{ width: 18%; }}
-        .summary-table colgroup col:nth-child(5) {{ width: 18%; }}
-        .summary-table colgroup col:nth-child(6) {{ width: 18%; }}
-
-        .summary-table thead tr {{
-            font-size: 9px;
-            letter-spacing: 0;
-        }}
-
-        .summary-table thead th {{
-            padding: 7px 3px;
-        }}
-
-        .summary-table td {{
-            padding: 6px 3px;
-            white-space: normal;
-            word-break: break-word;
-        }}
-
-        .summary-table td.stock-name {{
-            font-size: 10px;
-            letter-spacing: 0;
-        }}
-
-        .chg-badge {{
-            padding: 1px 4px;
-            font-size: 10px;
-            border-radius: 4px;
-        }}
-
-        .rank-badge {{
-            width: 18px;
-            height: 18px;
-            font-size: 9px;
-        }}
-
-        .summary-table thead th .sort-icon {{
-            display: none;
-        }}
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 50%; background: var(--border);
+        font-size: 11px; color: var(--muted); font-weight: 600;
     }}
     </style>
     </head>
@@ -687,11 +470,20 @@ def generate_html(all_data):
             <h1>📈 Portfolio Stock News</h1>
             <button onclick="toggleTheme()">Toggle Theme</button>
         </div>
-
+        
         <div class="updated">Last updated: {now}</div>
-    """
 
-    # ---- SUMMARY TABLE (sorted by monthly change, highest → lowest) ----
+        <div class="card" style="margin-bottom: 25px; padding: 20px;">
+            <h3 style="margin-top: 0;">➕ Add New Stock</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="newStockName" placeholder="Company Name (e.g. Tesla)" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); flex: 1; min-width: 200px;">
+                <input type="text" id="newStockTicker" placeholder="Ticker (e.g. TSLA)" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); flex: 1; min-width: 150px;">
+                <button onclick="submitNewStock()" id="addStockBtn" style="padding: 10px 16px; background: var(--accent); color: white; border: none; font-weight: bold; border-radius: 6px;">Add Stock</button>
+            </div>
+            <div id="addStockMsg" style="margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
+        </div>
+        """
+
     def chg_sort_key(item):
         pd = item[1]["price"]
         if pd and pd["monthly"] is not None:
@@ -712,23 +504,19 @@ def generate_html(all_data):
     <thead><tr>
         <th>#</th>
         <th>Stock</th>
-        <th class="sortable" data-col="price" onclick="sortTable(this)">Price (₹)<span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-col="price" onclick="sortTable(this)">Price<span class="sort-icon">⇅</span></th>
         <th class="sortable" data-col="daily" onclick="sortTable(this)">1D Change<span class="sort-icon">⇅</span></th>
         <th class="sortable" data-col="weekly" onclick="sortTable(this)">1W Change<span class="sort-icon">⇅</span></th>
         <th class="sortable sort-desc" data-col="monthly" onclick="sortTable(this)">1M Change<span class="sort-icon">▼</span></th>
     </tr></thead><tbody>'''
 
-    def null_val(v):
-        return "null" if v is None else str(v)
+    def null_val(v): return "null" if v is None else str(v)
 
     for rank, (stock, data) in enumerate(table_rows, 1):
         pd = data["price"]
         if pd:
-            price_val  = null_val(pd["price"])
-            daily_val  = null_val(pd["daily"])
-            weekly_val = null_val(pd["weekly"])
-            monthly_val= null_val(pd["monthly"])
-            price_cell   = f'<td class="price-cell">₹{pd["price"]}</td>'
+            price_val, daily_val, weekly_val, monthly_val = null_val(pd["price"]), null_val(pd["daily"]), null_val(pd["weekly"]), null_val(pd["monthly"])
+            price_cell   = f'<td class="price-cell">{pd["price"]}</td>'
             daily_cell   = f'<td>{fmt_badge(pd["daily"])}</td>'
             weekly_cell  = f'<td>{fmt_badge(pd["weekly"])}</td>'
             monthly_cell = f'<td>{fmt_badge(pd["monthly"])}</td>'
@@ -750,40 +538,25 @@ def generate_html(all_data):
         news = stock_data["news"]
         if not news:
             return datetime(1970, 1, 1, tzinfo=ZoneInfo("Asia/Kolkata"))
-
-        def normalize(dt):
+        def normalize_dt(dt):
             if dt.tzinfo is None:
                 return dt.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
             return dt
+        return max(normalize_dt(article["date"]) for article in news)
 
-        return max(normalize(article["date"]) for article in news)
-
-
-    # SORT STOCKS HERE
-    sorted_items = sorted(
-        all_data.items(),
-        key=lambda x: get_latest_news_time(x[1]),
-        reverse=True
-    )
+    sorted_items = sorted(all_data.items(), key=lambda x: get_latest_news_time(x[1]), reverse=True)
 
     for stock, data in sorted_items:
         articles = data["news"]
         price_data = data["price"]
 
         if price_data:
-            price = price_data["price"]
-            daily = price_data["daily"]
-            weekly = price_data["weekly"]
-            monthly = price_data["monthly"]
-
-            def get_color(val):
-                if val is None:
-                    return "#94a3b8"  # muted
-                return "#22c55e" if val >= 0 else "#ef4444"
+            price, daily, weekly, monthly = price_data["price"], price_data["daily"], price_data["weekly"], price_data["monthly"]
+            def get_color(val): return "#94a3b8" if val is None else ("#22c55e" if val >= 0 else "#ef4444")
 
             price_html = f"""
             <div class="price">
-                ₹{price}
+                {price}
                 <div style="font-size:12px;">
                     <span style="color:{get_color(daily)}">1D: {daily}%</span> |
                     <span style="color:{get_color(weekly)}">1W: {weekly if weekly is not None else 'N/A'}%</span> |
@@ -791,12 +564,7 @@ def generate_html(all_data):
                 </div>
             </div>
             """
-            if monthly is None:
-                trend_class = "trend-neutral"
-            elif monthly >= 0:
-                trend_class = "trend-up"
-            else:
-                trend_class = "trend-down"
+            trend_class = "trend-neutral" if monthly is None else ("trend-up" if monthly >= 0 else "trend-down")
         else:
             price_html = '<div class="price">N/A</div>'
             trend_class = "trend-neutral"
@@ -815,7 +583,6 @@ def generate_html(all_data):
         else:
             for a in articles:
                 time_str = a["date"].strftime('%d %b %I:%M %p')
-
                 html += f"""
                 <div class="card">
                     <a href="{a['link']}" target="_blank">{a['title']}</a>
@@ -825,12 +592,55 @@ def generate_html(all_data):
                     </div>
                 </div>
                 """
-
         html += "</div></div>"
 
     html += """
     </div>
 
+    <script>
+    async function submitNewStock() {
+        const name = document.getElementById('newStockName').value.trim();
+        const ticker = document.getElementById('newStockTicker').value.trim();
+        const msg = document.getElementById('addStockMsg');
+        const btn = document.getElementById('addStockBtn');
+        
+        if (!name || !ticker) {
+            msg.style.color = '#ef4444';
+            msg.textContent = 'Company Name and Ticker are required.';
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        msg.style.color = 'var(--muted)';
+        msg.textContent = 'Adding stock and fetching data (this may take a few seconds)...';
+        
+        try {
+            const res = await fetch('/api/add_stock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, ticker })
+            });
+            const data = await res.json();
+            
+            if (res.ok && data.success) {
+                msg.style.color = '#22c55e';
+                msg.textContent = data.message + ' Reloading page...';
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                msg.style.color = '#ef4444';
+                msg.textContent = data.message || 'Error adding stock.';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        } catch (e) {
+            msg.style.color = '#ef4444';
+            msg.textContent = 'Network error or server disconnected.';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    }
+    </script>
     <script>
     function sortTable(th) {
         const table = document.getElementById("summaryTable");
@@ -839,7 +649,6 @@ def generate_html(all_data):
         const isDesc = th.classList.contains("sort-desc");
         const newDir = isDesc ? "asc" : "desc";
 
-        // Reset all headers
         table.querySelectorAll("th.sortable").forEach(h => {
             h.classList.remove("sort-asc", "sort-desc");
             h.querySelector(".sort-icon").textContent = "⇅";
@@ -850,163 +659,135 @@ def generate_html(all_data):
 
         const rows = Array.from(tbody.querySelectorAll("tr"));
         rows.sort((a, b) => {
-            const av = a.dataset[col];
-            const bv = b.dataset[col];
+            const av = a.dataset[col], bv = b.dataset[col];
             const an = av === "null" ? -Infinity : parseFloat(av);
             const bn = bv === "null" ? -Infinity : parseFloat(bv);
             return newDir === "desc" ? bn - an : an - bn;
         });
 
-        // Re-insert sorted rows and update rank badges
         rows.forEach((row, i) => {
             row.querySelector(".rank-badge").textContent = i + 1;
             tbody.appendChild(row);
         });
     }
-    </script>
 
-    <script>
     function toggleTheme() {
         document.body.classList.toggle("light");
-        localStorage.setItem("theme",
-            document.body.classList.contains("light") ? "light" : "dark"
-        );
+        localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     }
 
     window.onload = function() {
-        const saved = localStorage.getItem("theme");
-        if (saved === "light") {
+        if (localStorage.getItem("theme") === "light") {
             document.body.classList.add("light");
         }
     }
     </script>
-
-    <script>
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js");
-    }
-    </script>
-
-    <script>
-    // --- AUTO REFRESH EVERY 2 HOURS ---
-    setTimeout(() => {
-        location.reload();
-    }, 2 * 60 * 60 * 1000);
-
-
-    // --- REAL BROWSER NOTIFICATION SYSTEM ---
-
-    function getCurrentTitles() {
-        return Array.from(document.querySelectorAll(".card a"))
-            .map(a => a.innerText.trim());
-    }
-
-    function highlightNew(seenSet) {
-        document.querySelectorAll(".card").forEach(card => {
-            const title = card.querySelector("a").innerText.trim();
-            if (!seenSet.has(title)) {
-                card.style.border = "1px solid #22c55e";
-                card.style.boxShadow = "0 0 10px rgba(34,197,94,0.5)";
-            }
-        });
-    }
-
-    function fireNotification(newItems) {
-        if (!("Notification" in window)) return;
-
-        const send = () => {{
-            // One grouped notification summarising all new articles
-            const n = new Notification("📈 Portfolio News Update", {{
-                body: newItems.length === 1
-                    ? newItems[0]
-                    : `${{newItems.length}} new articles — ${{newItems[0]}} …`,
-                icon: "https://cdn-icons-png.flaticon.com/512/2103/2103633.png",
-                tag: "portfolio-news",   // replaces previous notification instead of stacking
-                renotify: true
-            }});
-            // Clicking the notification focuses this tab
-            n.onclick = () => {{ window.focus(); n.close(); }};
-        }};
-
-        if (Notification.permission === "granted") {{
-            send();
-        }} else if (Notification.permission === "default") {{
-            Notification.requestPermission().then(perm => {{
-                if (perm === "granted") send();
-            }});
-        }}
-        // If permission === "denied" — silently skip, nothing we can do
-    }}
-
-    // Request permission early (on first load) so it's ready before the next refresh
-    function requestPermissionEarly() {{
-        if ("Notification" in window && Notification.permission === "default") {{
-            Notification.requestPermission();
-        }}
-    }}
-
-    window.addEventListener("load", () => {{
-        requestPermissionEarly();
-
-        const current = getCurrentTitles();
-        const previous = JSON.parse(localStorage.getItem("seenTitles") || "[]");
-        const prevSet = new Set(previous);
-        const newItems = current.filter(t => !prevSet.has(t));
-
-        if (previous.length > 0 && newItems.length > 0) {{
-            fireNotification(newItems);
-            highlightNew(prevSet);
-        }}
-
-        localStorage.setItem("seenTitles", JSON.stringify(current));
-    }});
-    </script>
-
     </body>
     </html>
     """
-
     return html
 
+# ----------- SERVER & MAIN RUNNER -----------
 
-# ----------- MAIN -----------
-
-def main():
-    all_data = {}
-    global_seen_titles = []
-
-    # --- PHASE 1: Fetch all prices concurrently (yfinance / Yahoo Finance, safe to parallelise) ---
-    print(f"Fetching prices for {len(STOCKS)} stocks concurrently...")
-    prices = {}
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_stock = {executor.submit(get_stock_data, stock): stock for stock in STOCKS}
-        for future in as_completed(future_to_stock):
-            stock = future_to_stock[future]
-            try:
-                prices[stock] = future.result()
-            except Exception as e:
-                print(f"  Price fetch failed for {stock}: {e}")
-                prices[stock] = None
-    print(f"  Prices fetched.")
-
-    # --- PHASE 2: Fetch news sequentially (Google News RSS is rate-sensitive) ---
-    for stock in STOCKS:
-        print(f"Fetching news: {stock}...")
-        news = fetch_news(stock, global_seen_titles)
-        all_data[stock] = {
-            "news": news,
-            "price": prices.get(stock)
-        }
-
-    html = generate_html(all_data)
-
+def trigger_html_build():
+    html = generate_html(app_data["all_data"])
     os.makedirs("public", exist_ok=True)
-
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
-    print("Done → public/index.html")
+def update_all_data():
+    stocks = load_stocks()
+    if not stocks:
+        print("No stocks found in database.")
+        return
+        
+    print(f"Fetching prices for {len(stocks)} stocks concurrently...")
+    prices = {}
+    
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_stock = {executor.submit(get_stock_data, s): s for s in stocks}
+        for future in as_completed(future_to_stock):
+            stock = future_to_stock[future]
+            try:
+                prices[stock['name']] = future.result()
+            except Exception:
+                prices[stock['name']] = None
+                
+    print("Fetching news...")
+    app_data["global_seen_titles"] = []
+    
+    for stock in stocks:
+        news = fetch_news(stock, app_data["global_seen_titles"])
+        app_data["all_data"][stock['name']] = {
+            "news": news,
+            "price": prices.get(stock['name'])
+        }
+        
+    trigger_html_build()
 
+class StockAppHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory="public", **kwargs)
+        
+    def do_POST(self):
+        if self.path == '/api/add_stock':
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                data = json.loads(post_data)
+                name = data.get('name', '').strip()
+                ticker = data.get('ticker', '').strip()
+                
+                new_stock = add_stock(name, ticker)
+                print(f"User added new stock via UI: {name} ({ticker})")
+                
+                # Fetch price and news specifically for this stock
+                price = get_stock_data(new_stock)
+                news = fetch_news(new_stock, app_data["global_seen_titles"])
+                
+                # Update global data & regenerate immediately
+                app_data["all_data"][new_stock['name']] = {
+                    "news": news,
+                    "price": price
+                }
+                trigger_html_build()
+                
+                response = {"success": True, "message": f"Added {name} successfully!"}
+                status = 200
+            except ValueError as e:
+                response = {"success": False, "message": str(e)}
+                status = 400
+            except Exception as e:
+                response = {"success": False, "message": f"Server Error: {str(e)}"}
+                status = 500
+                
+            self.send_response(status)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        else:
+            super().do_POST()
+
+def main():
+    if not os.path.exists(STOCKS_FILE):
+        print(f"Warning: {STOCKS_FILE} not found. Please create it first to begin populating data.")
+        return
+        
+    print("Initial startup data fetch...")
+    update_all_data()
+    
+    print("\n=============================================")
+    print("✅ Dashboard ready! Serving locally.")
+    print("👉 Open your browser to: http://localhost:8000")
+    print("=============================================\n")
+    
+    # Keeps script running to capture user UI additions dynamically.
+    with socketserver.TCPServer(("", 8000), StockAppHandler) as httpd:
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down local server.")
 
 if __name__ == "__main__":
     main()
