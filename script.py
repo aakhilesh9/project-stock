@@ -55,7 +55,46 @@ app_data = {
 
 def load_stocks():
     if not os.path.exists(STOCKS_FILE):
-        return []
+        print(f"{STOCKS_FILE} not found. Creating it with default stocks...")
+        default_stocks = [
+            {"name": "ANGELONE", "ticker": "ANGELONE.NS", "keywords": ["angel one", "angelone", "angel broking"]},
+            {"name": "ASIANPAINT", "ticker": "ASIANPAINT.NS", "keywords": ["asianpain", "asian paints", "asian paint stock", "asian paints share"]},
+            {"name": "BAJAJFINANCE", "ticker": "BAJFINANCE.NS", "keywords": ["bajajfinance", "bajaj finance", "bajajfinance stock"]},
+            {"name": "COALINDIA", "ticker": "COALINDIA.NS", "keywords": ["coal india", "coal india stock", "coal india limited"]},
+            {"name": "DIVISLAB", "ticker": "DIVISLAB.NS", "keywords": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"]},
+            {"name": "DIXON", "ticker": "DIXON.NS", "keywords": ["dixon", "dixon technologies", "dixon tech"]},
+            {"name": "EPIGRAL", "ticker": "EPIGRAL.NS", "keywords": ["epigral", "epigral ltd"]},
+            {"name": "FCL", "ticker": "FCL.NS", "keywords": ["fineotex", "fineotex chemical", "fineotex share"]},
+            {"name": "GAIL", "ticker": "GAIL.NS", "keywords": ["gail", "gail india", "gas authority of india"]},
+            {"name": "HDBFS", "ticker": "HDBFS.NS", "keywords": ["hdbfs", "hdb financial", "hdfc financial"]},
+            {"name": "HDFC BANK", "ticker": "HDFCBANK.NS", "keywords": ["hdfc bank", "hdfc"]},
+            {"name": "ICICI BANK", "ticker": "ICICIBANK.NS", "keywords": ["icici bank", "icici"]},
+            {"name": "INFOSYS", "ticker": "INFY.NS", "keywords": ["infosys", "infy"]},
+            {"name": "ITC", "ticker": "ITC.NS", "keywords": ["itc", "itc stock", "itc share"]},
+            {"name": "KIRLOSENG", "ticker": "KIRLOSENG.NS", "keywords": ["kirloseng", "kirloskar oil", "kirloskar oil engines"]},
+            {"name": "KOTAKBANK", "ticker": "KOTAKBANK.NS", "keywords": ["kotakbank", "kotak bank", "kotak mahindra bank", "kotak"]},
+            {"name": "LAURUSLABS", "ticker": "LAURUSLABS.NS", "keywords": ["laurus labs", "laurus", "lauruslabs"]},
+            {"name": "MANKIND", "ticker": "MANKIND.NS", "keywords": ["mankind pharma", "mankind"]},
+            {"name": "MARICO", "ticker": "MARICO.NS", "keywords": ["marico"]},
+            {"name": "NTPC", "ticker": "NTPC.NS", "keywords": ["ntpc"]},
+            {"name": "PETRONET", "ticker": "PETRONET.NS", "keywords": ["petronet lng", "petronet"]},
+            {"name": "PFC", "ticker": "PFC.NS", "keywords": ["power finance corporation", "pfc"]},
+            {"name": "PIIND", "ticker": "PIIND.NS", "keywords": ["p i industries", "pi industries", "pi ind"]},
+            {"name": "POLYCAB", "ticker": "POLYCAB.NS", "keywords": ["polycab"]},
+            {"name": "POONAWALLA", "ticker": "POONAWALLA.NS", "keywords": ["poonawalla fincorp", "poonawalla"]},
+            {"name": "RELIANCE", "ticker": "RELIANCE.NS", "keywords": ["reliance", "ril", "mukesh ambani"]},
+            {"name": "SBIN", "ticker": "SBIN.NS", "keywords": ["sbin", "state bank of india"]},
+            {"name": "STYLAMIND", "ticker": "STYLAMIND.NS", "keywords": ["stylamind", "stylam industries", "stylam"]},
+            {"name": "TCS", "ticker": "TCS.NS", "keywords": ["tcs", "tata consultancy services"]},
+            {"name": "TMPV", "ticker": "TMPV.NS", "keywords": ["tata motors", "tmpv"]},
+            {"name": "TMCV", "ticker": "TMCV.NS", "keywords": ["tata motors", "tmcv"]},
+            {"name": "TRIVENI", "ticker": "TRIVENI.NS", "keywords": ["triveni engg", "triveni engineering"]},
+            {"name": "VBL", "ticker": "VBL.NS", "keywords": ["varun beverages", "vbl"]},
+            {"name": "ZENTEC", "ticker": "ZENTEC.NS", "keywords": ["zen technologies", "zen tech", "zentech", "zentec", "zentec.ns", "zen technologies ltd"]}
+        ]
+        save_stocks(default_stocks)
+        return default_stocks
+        
     try:
         with open(STOCKS_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -770,9 +809,21 @@ class StockAppHandler(http.server.SimpleHTTPRequestHandler):
             super().do_POST()
 
 def main():
-    if not os.path.exists(STOCKS_FILE):
-        print(f"Warning: {STOCKS_FILE} not found. Please create it first to begin populating data.")
-        return
+    print("Initial startup data fetch...")
+    # This will now successfully run, create the JSON if missing, and create the public folder
+    update_all_data()
+    
+    print("\n=============================================")
+    print("✅ Dashboard ready! Serving locally.")
+    print("👉 Open your browser to: http://localhost:8000")
+    print("=============================================\n")
+    
+    # Keeps script running to capture user UI additions dynamically.
+    with socketserver.TCPServer(("", 8000), StockAppHandler) as httpd:
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down local server.")
         
     print("Initial startup data fetch...")
     update_all_data()
