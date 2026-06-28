@@ -1206,7 +1206,7 @@ def generate_html(all_data, stocks_data):
     )
     html = html.replace("%%ADD_STOCK_SCRIPT%%", add_stock_script)
 
-
+    return html
 
 
 # ----------- MAIN -----------
