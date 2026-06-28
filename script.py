@@ -355,7 +355,8 @@ def fetch_news(stock, global_seen_titles):
             if len(collected) >= MAX_NEWS:
                 break
 
-            title = entry.title.strip()
+            raw_title = entry.title.strip()
+            title = raw_title.encode("utf-8", errors="replace").decode("utf-8")
             # ---- RELEVANCE FILTER ----
             if not is_relevant_to_stock(title, stock):
                 continue
@@ -382,7 +383,7 @@ def fetch_news(stock, global_seen_titles):
 
             collected.append({
                 "title": title,
-                "link": entry.link,
+                "link": entry.link.encode("utf-8", errors="replace").decode("utf-8"),
                 "date": dt,
                 "source": source_name
             })
@@ -1268,6 +1269,9 @@ def main():
         }
 
     html = generate_html(all_data)
+
+    # Strip surrogate characters that can sneak in from malformed RSS feed content
+    html = html.encode("utf-8", errors="replace").decode("utf-8")
 
     os.makedirs("public", exist_ok=True)
 
