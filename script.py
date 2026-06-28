@@ -394,8 +394,16 @@ def fetch_news(stock, global_seen_titles):
 
 # ----------- HTML -----------
 
-def generate_html(all_data):
+def generate_html(all_data, stocks_data):
     now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime('%d %b %Y %I:%M %p')
+
+    # Read repo identity from environment (set by GitHub Actions)
+    gh_owner = os.environ.get("GITHUB_REPOSITORY_OWNER", "")
+    gh_repo_full = os.environ.get("GITHUB_REPOSITORY", "/")   # "owner/repo"
+    gh_repo = gh_repo_full.split("/", 1)[-1] if "/" in gh_repo_full else gh_repo_full
+
+    # Embed current stocks as JSON so the browser JS can diff and update
+    stocks_json_embedded = json.dumps(stocks_data, ensure_ascii=False)
 
     html = f"""
     <html>
@@ -807,6 +815,12 @@ def generate_html(all_data):
         color: #ef4444;
         border: 1px solid rgba(239,68,68,0.3);
     }}
+
+    .add-msg.info {{
+        background: rgba(56,189,248,0.12);
+        color: var(--accent);
+        border: 1px solid rgba(56,189,248,0.3);
+    }}
     </style>
     </head>
 
@@ -825,9 +839,14 @@ def generate_html(all_data):
     <div class="add-stock-panel" id="addStockPanel">
         <h3 style="margin:0 0 10px">➕ Add New Stock</h3>
         <div class="add-stock-form">
-            <input id="newStockName"   type="text" placeholder="Company Name (e.g. Tesla)"  class="add-input" />
-            <input id="newStockTicker" type="text" placeholder="NSE Ticker (e.g. TSLA)"     class="add-input" />
+            <input id="newStockName"   type="text"      placeholder="Company Name (e.g. Tata Steel)"  class="add-input" />
+            <input id="newStockTicker" type="text"      placeholder="NSE Ticker (e.g. TATASTEEL)"      class="add-input" />
+            <input id="ghToken"        type="password"  placeholder="GitHub PAT (repo scope)"          class="add-input" style="flex:1 1 200px" />
             <button id="addStockBtn" onclick="submitAddStock()">Add Stock</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+            Token is used once to commit stocks.json to your repo. It is never stored or sent anywhere else.<br>
+            Create one at <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">github.com/settings/tokens</a> with <strong>repo</strong> scope.
         </div>
         <div id="addStockMsg" class="add-msg" style="display:none"></div>
     </div>
@@ -1105,100 +1124,112 @@ def generate_html(all_data):
     </script>
 
     <script>
-    // ---- ADD STOCK ----
-    // Static GitHub Pages has no live server, so additions are:
-    //   1. Validated and shown immediately as placeholder cards via localStorage.
-    //   2. Stored in a hidden JSON blob that the Python build picks up next run.
+    // ---- ADD STOCK via GitHub Contents API ----
+    // Writes stocks.json directly to the repo so the next build picks it up.
+    // The user provides a short-lived GitHub PAT (repo scope) each time they add a stock.
+    // The token is used for one API call and is never stored anywhere.
 
-    const PENDING_KEY = "pendingStocks";
+    const REPO_OWNER = "{gh_owner}";
+    const REPO_NAME  = "{gh_repo}";
+    const STOCKS_PATH = "stocks.json";
 
-    function showMsg(text, type) {
+    // Current stocks.json content is embedded at build time so we can update it
+    const CURRENT_STOCKS = {stocks_json_embedded};
+
+    function showMsg(text, type) {{
         const el = document.getElementById("addStockMsg");
         el.textContent = text;
         el.className = "add-msg " + type;
         el.style.display = "block";
-        if (type === "success") setTimeout(() => { el.style.display = "none"; }, 5000);
-    }
+        if (type !== "success") return;
+        setTimeout(() => {{ el.style.display = "none"; }}, 8000);
+    }}
 
-    function getPending() {
-        try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "{}"); }
-        catch { return {}; }
-    }
-
-    function savePending(obj) {
-        localStorage.setItem(PENDING_KEY, JSON.stringify(obj));
-        // Also write into the hidden blob so the next Python build can read it
-        const el = document.getElementById("pendingStocksData");
-        if (el) el.textContent = JSON.stringify(obj);
-    }
-
-    function submitAddStock() {
+    async function submitAddStock() {{
         const name   = document.getElementById("newStockName").value.trim();
         const ticker = document.getElementById("newStockTicker").value.trim().toUpperCase();
+        const token  = document.getElementById("ghToken").value.trim();
 
-        if (!name)   { showMsg("⚠️ Company name cannot be empty.", "error");   return; }
-        if (!ticker) { showMsg("⚠️ Ticker symbol cannot be empty.", "error"); return; }
+        if (!name)   {{ showMsg("Company name cannot be empty.", "error");   return; }}
+        if (!ticker) {{ showMsg("Ticker symbol cannot be empty.", "error");  return; }}
+        if (!token)  {{ showMsg("GitHub PAT is required to save the stock.", "error"); return; }}
 
-        const pending = getPending();
-
-        // Duplicate check against rendered stocks and already-pending stocks
-        const builtIn = new Set(
-            Array.from(document.querySelectorAll(".stock h2"))
-                 .map(h => h.textContent.trim().split(" ")[0].toUpperCase())
-        );
-        if (builtIn.has(ticker) || Object.keys(pending).map(k => k.toUpperCase()).includes(ticker)) {
-            showMsg('\u26a0\ufe0f "' + ticker + '" is already in your stock list.', "error");
+        // Duplicate check
+        if (CURRENT_STOCKS[ticker]) {{
+            showMsg('"' + ticker + '" is already in your stock list.', "error");
             return;
-        }
+        }}
 
-        pending[ticker] = { name: name, ticker: ticker };
-        savePending(pending);
+        const btn = document.getElementById("addStockBtn");
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+        showMsg("Committing stocks.json to repo...", "info");
 
-        renderPendingStock(name, ticker);
+        try {{
+            // 1. Get the current file SHA (required for the update API)
+            const metaRes = await fetch(
+                "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STOCKS_PATH,
+                {{ headers: {{ Authorization: "token " + token, Accept: "application/vnd.github+json" }} }}
+            );
+            if (!metaRes.ok) {{
+                const err = await metaRes.json();
+                throw new Error("Could not fetch stocks.json from GitHub: " + (err.message || metaRes.status));
+            }}
+            const meta = await metaRes.json();
+            const fileSha = meta.sha;
 
-        document.getElementById("newStockName").value   = "";
-        document.getElementById("newStockTicker").value = "";
-        showMsg('\u2705 "' + name + ' (' + ticker + ')" added! Price & news will appear on the next scheduled refresh.', "success");
-    }
+            // 2. Build the updated stocks object
+            const updated = Object.assign({{}}, CURRENT_STOCKS);
+            const yfTicker = ticker.includes(".") ? ticker : ticker + ".NS";
+            updated[ticker] = {{ name: name, ticker: yfTicker }};
 
-    function renderPendingStock(name, ticker) {
-        const container = document.querySelector(".container");
-        const existing  = document.getElementById("pending-" + ticker);
-        if (existing) return;
+            // 3. Commit the updated file
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));
+            const putRes = await fetch(
+                "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STOCKS_PATH,
+                {{
+                    method: "PUT",
+                    headers: {{ Authorization: "token " + token, Accept: "application/vnd.github+json", "Content-Type": "application/json" }},
+                    body: JSON.stringify({{
+                        message: "Add stock: " + ticker + " (" + name + ")",
+                        content: content,
+                        sha: fileSha
+                    }})
+                }}
+            );
+            if (!putRes.ok) {{
+                const err = await putRes.json();
+                throw new Error("GitHub commit failed: " + (err.message || putRes.status));
+            }}
 
-        const div = document.createElement("div");
-        div.className = "stock trend-neutral";
-        div.id = "pending-" + ticker;
-        div.innerHTML =
-            '<div class="stock-header">' +
-                '<h2>' + ticker + ' <span style="font-size:12px;color:var(--muted)">(' + name + ')</span></h2>' +
-                '<div class="price" style="color:var(--muted);font-size:13px;">Pending next refresh</div>' +
-            '</div>' +
-            '<div class="grid">' +
-                '<div class="empty">\uD83D\uDCCC This stock will appear with live data on the next scheduled update.</div>' +
-            '</div>';
-        container.appendChild(div);
-    }
+            // Clear inputs (do NOT store the token anywhere)
+            document.getElementById("newStockName").value   = "";
+            document.getElementById("newStockTicker").value = "";
+            document.getElementById("ghToken").value        = "";
 
-    // Re-render pending stocks on every page load
-    window.addEventListener("load", function() {
-        const pending = getPending();
-        const builtIn = Array.from(document.querySelectorAll(".stock h2"))
-                            .map(h => h.textContent.trim().split(" ")[0].toUpperCase());
-        for (const ticker in pending) {
-            if (!builtIn.includes(ticker.toUpperCase())) {
-                renderPendingStock(pending[ticker].name, ticker);
-            }
-        }
-    });
+            showMsg(
+                ticker + " (" + name + ") saved to stocks.json. " +
+                "Trigger the workflow on GitHub Actions to see it with live data.",
+                "success"
+            );
+
+        }} catch(e) {{
+            showMsg("Error: " + e.message, "error");
+        }} finally {{
+            btn.disabled = false;
+            btn.textContent = "Add Stock";
+        }}
+    }}
     </script>
-
-    <!-- Hidden JSON blob: Python build reads this on the next run to absorb pending stocks -->
-    <script id="pendingStocksData" type="application/json" style="display:none"></script>
 
     </body>
     </html>
     """
+
+    # Substitute repo config and current stocks into the JS placeholders
+    html = html.replace("{gh_owner}", gh_owner)
+    html = html.replace("{gh_repo}", gh_repo)
+    html = html.replace("{stocks_json_embedded}", stocks_json_embedded)
 
     return html
 
@@ -1209,33 +1240,9 @@ def main():
     all_data = {}
     global_seen_titles = []
 
-    # Reload the stock list fresh (picks up any stocks added since module load)
+    # Reload the stock list fresh (picks up any stocks committed to stocks.json via the UI)
     stocks_data = load_stocks()
     stock_keys  = list(stocks_data.keys())
-
-    # Also absorb any pending stocks that were saved from the browser UI.
-    # The build reads public/index.html from the PREVIOUS run and extracts the
-    # hidden <script id="pendingStocksData"> JSON blob so user additions survive.
-    pending = _read_pending_from_previous_build()
-    for ticker, info in pending.items():
-        key = ticker.upper()
-        if key not in stocks_data:
-            # Validate with yfinance before committing
-            yf_ticker = info.get("ticker") or (key + ".NS")
-            try:
-                hist = yf.Ticker(yf_ticker).history(period="1d")
-                if not hist.empty:
-                    stocks_data[key] = {"name": info.get("name", key), "ticker": yf_ticker}
-                    print(f"  Absorbed pending stock: {key} ({yf_ticker})")
-                else:
-                    print(f"  Skipped pending stock {key}: no price data returned.")
-            except Exception as e:
-                print(f"  Skipped pending stock {key}: {e}")
-
-    # Persist any absorbed stocks back to stocks.json
-    save_stocks(stocks_data)
-    # Refresh global list
-    stock_keys = list(stocks_data.keys())
 
     # Update module-level STOCKS_DATA so helpers (get_stock_data, is_relevant_to_stock) see new entries
     STOCKS_DATA.clear()
@@ -1268,7 +1275,7 @@ def main():
             "price": prices.get(stock)
         }
 
-    html = generate_html(all_data)
+    html = generate_html(all_data, stocks_data)
 
     # Strip surrogate characters that can sneak in from malformed RSS feed content
     html = html.encode("utf-8", errors="replace").decode("utf-8")
@@ -1279,34 +1286,6 @@ def main():
         f.write(html)
 
     print("Done → public/index.html")
-
-
-def _read_pending_from_previous_build():
-    """
-    Parse the hidden <script id="pendingStocksData"> JSON blob from the
-    previously generated index.html, so user-added stocks survive rebuilds.
-    Returns a dict of {TICKER: {name, ticker}} or empty dict on any failure.
-    """
-    prev_html = "public/index.html"
-    if not os.path.exists(prev_html):
-        return {}
-    try:
-        import re as _re
-        with open(prev_html, "r", encoding="utf-8") as f:
-            content = f.read()
-        match = _re.search(
-            r'<script[^>]+id="pendingStocksData"[^>]*>(.*?)</script>',
-            content, _re.DOTALL
-        )
-        if not match:
-            return {}
-        raw = match.group(1).strip()
-        if not raw:
-            return {}
-        return json.loads(raw)
-    except Exception as e:
-        print(f"  Could not read pending stocks from previous build: {e}")
-        return {}
 
 
 if __name__ == "__main__":

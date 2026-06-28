@@ -5,9 +5,8 @@ on:
     - cron: "0 */4 * * *"   # every 4 hours
   workflow_dispatch:
 
-# Simplified permissions
 permissions:
-  contents: read
+  contents: write          # needed to commit stocks.json changes
   pages: write
   id-token: write
 
@@ -28,12 +27,23 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run script
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: python script.py
+
+      - name: Commit stocks.json if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stocks.json
+          git diff --cached --quiet || git commit -m "chore: update stocks.json [skip ci]"
+          git push
 
       - name: Upload artifact for deployment
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './public' # Tells GitHub to ONLY upload our new public folder
+          path: './public'
 
   deploy:
     needs: build
