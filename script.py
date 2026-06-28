@@ -3,17 +3,125 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import quote_plus
 import os
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import yfinance as yf
 from rapidfuzz.fuzz import ratio
 from dateutil import parser as dateparser
 
-STOCKS = ["ANGELONE", "ASIANPAINT", "BAJAJFINANCE", "COALINDIA", "DIVISLAB",
-          "DIXON", "EPIGRAL", "FCL", "GAIL", "HDBFS", "HDFC BANK",
-          "ICICI BANK", "INFOSYS", "ITC", "KIRLOSENG", "KOTAKBANK",
-          "LAURUSLABS", "MANKIND", "MARICO", "NTPC", "PETRONET",
-          "PFC", "PIIND", "POLYCAB", "POONAWALLA", "RELIANCE",
-          "SBIN", "STYLAMIND", "TCS", "TMPV", "TMCV", "TRIVENI", "VBL", "ZENTEC"]
+STOCKS_FILE = "stocks.json"
+
+# Default stocks loaded if stocks.json does not exist yet
+DEFAULT_STOCKS = {
+    "ANGELONE":   {"name": "Angel One",              "ticker": "ANGELONE.NS"},
+    "ASIANPAINT": {"name": "Asian Paints",            "ticker": "ASIANPAINT.NS"},
+    "BAJAJFINANCE":{"name": "Bajaj Finance",          "ticker": "BAJFINANCE.NS"},
+    "COALINDIA":  {"name": "Coal India",              "ticker": "COALINDIA.NS"},
+    "DIVISLAB":   {"name": "Divi's Laboratories",     "ticker": "DIVISLAB.NS"},
+    "DIXON":      {"name": "Dixon Technologies",      "ticker": "DIXON.NS"},
+    "EPIGRAL":    {"name": "Epigral",                 "ticker": "EPIGRAL.NS"},
+    "FCL":        {"name": "Fineotex Chemical",       "ticker": "FCL.NS"},
+    "GAIL":       {"name": "GAIL India",              "ticker": "GAIL.NS"},
+    "HDBFS":      {"name": "HDB Financial Services",  "ticker": "HDBFS.NS"},
+    "HDFC BANK":  {"name": "HDFC Bank",               "ticker": "HDFCBANK.NS"},
+    "ICICI BANK": {"name": "ICICI Bank",              "ticker": "ICICIBANK.NS"},
+    "INFOSYS":    {"name": "Infosys",                 "ticker": "INFY.NS"},
+    "ITC":        {"name": "ITC",                     "ticker": "ITC.NS"},
+    "KIRLOSENG":  {"name": "Kirloskar Oil Engines",   "ticker": "KIRLOSENG.NS"},
+    "KOTAKBANK":  {"name": "Kotak Mahindra Bank",     "ticker": "KOTAKBANK.NS"},
+    "LAURUSLABS": {"name": "Laurus Labs",             "ticker": "LAURUSLABS.NS"},
+    "MANKIND":    {"name": "Mankind Pharma",          "ticker": "MANKIND.NS"},
+    "MARICO":     {"name": "Marico",                  "ticker": "MARICO.NS"},
+    "NTPC":       {"name": "NTPC",                    "ticker": "NTPC.NS"},
+    "PETRONET":   {"name": "Petronet LNG",            "ticker": "PETRONET.NS"},
+    "PFC":        {"name": "Power Finance Corporation","ticker": "PFC.NS"},
+    "PIIND":      {"name": "PI Industries",           "ticker": "PIIND.NS"},
+    "POLYCAB":    {"name": "Polycab India",           "ticker": "POLYCAB.NS"},
+    "POONAWALLA": {"name": "Poonawalla Fincorp",      "ticker": "POONAWALLA.NS"},
+    "RELIANCE":   {"name": "Reliance Industries",     "ticker": "RELIANCE.NS"},
+    "SBIN":       {"name": "State Bank of India",     "ticker": "SBIN.NS"},
+    "STYLAMIND":  {"name": "Stylam Industries",       "ticker": "STYLAMIND.NS"},
+    "TCS":        {"name": "Tata Consultancy Services","ticker": "TCS.NS"},
+    "TMPV":       {"name": "Tata Motors PV",          "ticker": "TMPV.NS"},
+    "TMCV":       {"name": "Tata Motors CV",          "ticker": "TMCV.NS"},
+    "TRIVENI":    {"name": "Triveni Engineering",     "ticker": "TRIVENI.NS"},
+    "VBL":        {"name": "Varun Beverages",         "ticker": "VBL.NS"},
+    "ZENTEC":     {"name": "Zen Technologies",        "ticker": "ZENTEC.NS"},
+}
+
+
+# ----------- PERSISTENT STOCK STORAGE -----------
+
+def load_stocks():
+    """Load stock list from stocks.json; create it with defaults if missing."""
+    if not os.path.exists(STOCKS_FILE):
+        save_stocks(DEFAULT_STOCKS)
+        return dict(DEFAULT_STOCKS)
+    try:
+        with open(STOCKS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError("stocks.json must be a JSON object")
+        return data
+    except Exception as e:
+        print(f"  Warning: Could not read {STOCKS_FILE} ({e}). Using defaults.")
+        return dict(DEFAULT_STOCKS)
+
+
+def save_stocks(stocks_dict):
+    """Persist the stock dict to stocks.json."""
+    try:
+        with open(STOCKS_FILE, "w", encoding="utf-8") as f:
+            json.dump(stocks_dict, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"  Warning: Could not write {STOCKS_FILE}: {e}")
+
+
+def add_stock(name, ticker, stocks_dict):
+    """
+    Validate and add a new stock entry.
+
+    Returns (True, key) on success or (False, error_message) on failure.
+    The yfinance ticker symbol is derived from the user-supplied ticker by
+    appending '.NS' if no exchange suffix is present.
+    """
+    name = name.strip()
+    ticker = ticker.strip().upper()
+
+    # --- Input validation ---
+    if not name:
+        return False, "Company name cannot be empty."
+    if not ticker:
+        return False, "Ticker symbol cannot be empty."
+
+    # Normalise: add .NS suffix for NSE stocks if not already qualified
+    yf_ticker = ticker if "." in ticker else f"{ticker}.NS"
+
+    # Duplicate check (case-insensitive key comparison)
+    existing_keys = {k.upper() for k in stocks_dict}
+    if ticker in existing_keys:
+        return False, f"Ticker '{ticker}' already exists in the stock list."
+
+    # Verify the ticker resolves to real data via yfinance
+    try:
+        t = yf.Ticker(yf_ticker)
+        hist = t.history(period="1d")
+        if hist.empty:
+            return False, f"Ticker '{yf_ticker}' returned no price data. Please verify the symbol."
+    except Exception as e:
+        return False, f"Could not validate ticker '{yf_ticker}': {e}"
+
+    # Add to dict and persist
+    stocks_dict[ticker] = {"name": name, "ticker": yf_ticker}
+    save_stocks(stocks_dict)
+    return True, ticker
+
+
+# Load the working stock list at module level so the rest of the script can use it
+STOCKS_DATA = load_stocks()
+
+# Flat list of stock keys (used wherever the original STOCKS list was used)
+STOCKS = list(STOCKS_DATA.keys())
 
 # ----------- RSS SOURCES (PRIORITY ORDER) -----------
 RSS_SOURCES = [
@@ -119,49 +227,16 @@ STOCK_KEYWORDS = {
 
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
-    mapping = {
-        "ANGELONE": "ANGELONE.NS",
-        "ASIANPAINT": "ASIANPAINT.NS",
-        "BAJAJFINANCE": "BAJFINANCE.NS",
-        "COALINDIA": "COALINDIA.NS",
-        "DIVISLAB": "DIVISLAB.NS",
-        "DIXON": "DIXON.NS",
-        "EPIGRAL": "EPIGRAL.NS",
-        "FCL": "FCL.NS",
-        "GAIL": "GAIL.NS",
-        "HDBFS": "HDBFS.NS",
-        "HDFC BANK": "HDFCBANK.NS",
-        "ICICI BANK": "ICICIBANK.NS",
-        "INFOSYS": "INFY.NS",
-        "ITC": "ITC.NS",
-        "KIRLOSENG": "KIRLOSENG.NS",
-        "KOTAKBANK": "KOTAKBANK.NS",
-        "LAURUSLABS": "LAURUSLABS.NS",
-        "MANKIND": "MANKIND.NS",
-        "MARICO": "MARICO.NS",
-        "NTPC": "NTPC.NS",
-        "PETRONET": "PETRONET.NS",
-        "PFC": "PFC.NS",
-        "PIIND": "PIIND.NS",
-        "POLYCAB": "POLYCAB.NS",
-        "POONAWALLA": "POONAWALLA.NS",
-        "RELIANCE": "RELIANCE.NS",
-        "SBIN": "SBIN.NS",
-        "STYLAMIND": "STYLAMIND.NS",
-        "TCS": "TCS.NS",
-        "TMCV": "TMCV.NS",
-        "TMPV": "TMPV.NS",
-        "TRIVENI": "TRIVENI.NS",
-        "VBL": "VBL.NS",
-        "ZENTEC": "ZENTEC.NS",
-    }
-
-    ticker = mapping.get(stock)
-    if not ticker:
+    # Look up the yfinance ticker from the loaded stock data; fall back gracefully
+    entry = STOCKS_DATA.get(stock)
+    if not entry:
+        return None
+    yf_ticker = entry.get("ticker")
+    if not yf_ticker:
         return None
 
     try:
-        data = yf.Ticker(ticker)
+        data = yf.Ticker(yf_ticker)
 
         # Fetch multiple periods
         hist_1d = data.history(period="1d")
@@ -244,7 +319,12 @@ def normalize(text):
 def is_relevant_to_stock(title, stock):
     title_norm = normalize(title)
 
-    keywords = STOCK_KEYWORDS.get(stock, [stock])
+    # Use manually curated keywords when available; otherwise derive from stored name/ticker
+    if stock in STOCK_KEYWORDS:
+        keywords = STOCK_KEYWORDS[stock]
+    else:
+        entry = STOCKS_DATA.get(stock, {})
+        keywords = [entry.get("name", stock), stock]
 
     for kw in keywords:
         if normalize(kw) in title_norm:
@@ -676,6 +756,56 @@ def generate_html(all_data):
             display: none;
         }}
     }}
+
+    /* ---- ADD STOCK PANEL ---- */
+    .add-stock-panel {{
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 30px;
+    }}
+
+    .add-stock-form {{
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }}
+
+    .add-input {{
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 12px;
+        font-size: 14px;
+        flex: 1 1 160px;
+        min-width: 140px;
+    }}
+
+    .add-input:focus {{
+        outline: 2px solid var(--accent);
+    }}
+
+    .add-msg {{
+        margin-top: 10px;
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }}
+
+    .add-msg.success {{
+        background: rgba(34,197,94,0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34,197,94,0.3);
+    }}
+
+    .add-msg.error {{
+        background: rgba(239,68,68,0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239,68,68,0.3);
+    }}
     </style>
     </head>
 
@@ -689,6 +819,17 @@ def generate_html(all_data):
         </div>
 
         <div class="updated">Last updated: {now}</div>
+
+    <!-- ===== ADD STOCK PANEL ===== -->
+    <div class="add-stock-panel" id="addStockPanel">
+        <h3 style="margin:0 0 10px">➕ Add New Stock</h3>
+        <div class="add-stock-form">
+            <input id="newStockName"   type="text" placeholder="Company Name (e.g. Tesla)"  class="add-input" />
+            <input id="newStockTicker" type="text" placeholder="NSE Ticker (e.g. TSLA)"     class="add-input" />
+            <button id="addStockBtn" onclick="submitAddStock()">Add Stock</button>
+        </div>
+        <div id="addStockMsg" class="add-msg" style="display:none"></div>
+    </div>
     """
 
     # ---- SUMMARY TABLE (sorted by monthly change, highest → lowest) ----
@@ -962,6 +1103,105 @@ def generate_html(all_data):
     }});
     </script>
 
+    <script>
+    // ---- ADD STOCK (client-side + pending file via fetch to /add_stock endpoint) ----
+    // On static GitHub Pages there is no live server.
+    // Strategy:
+    //   1. Validate inputs in the browser.
+    //   2. Save the new stock to localStorage so it persists across refreshes.
+    //   3. Write a pending_stocks entry that the Python build script picks up
+    //      on the next scheduled run (via a PENDING_STOCKS section in localStorage
+    //      rendered into a hidden JSON blob the script reads — see below).
+    //   4. Immediately render a placeholder card for the new stock.
+
+    const PENDING_KEY = "pendingStocks";
+
+    function showMsg(text, type) {{
+        const el = document.getElementById("addStockMsg");
+        el.textContent = text;
+        el.className = "add-msg " + type;
+        el.style.display = "block";
+        if (type === "success") setTimeout(() => {{ el.style.display = "none"; }}, 5000);
+    }}
+
+    function getPending() {{
+        try {{ return JSON.parse(localStorage.getItem(PENDING_KEY) || "{{}}"); }}
+        catch {{ return {{}}; }}
+    }}
+
+    function savePending(obj) {{
+        localStorage.setItem(PENDING_KEY, JSON.stringify(obj));
+        // Also update the hidden JSON blob so the next build can read it
+        const el = document.getElementById("pendingStocksData");
+        if (el) el.textContent = JSON.stringify(obj);
+    }}
+
+    function submitAddStock() {{
+        const name   = document.getElementById("newStockName").value.trim();
+        const ticker = document.getElementById("newStockTicker").value.trim().toUpperCase();
+
+        if (!name)   {{ showMsg("⚠️ Company name cannot be empty.", "error");   return; }}
+        if (!ticker) {{ showMsg("⚠️ Ticker symbol cannot be empty.", "error"); return; }}
+
+        const pending = getPending();
+
+        // Duplicate check against both built-in and pending stocks
+        const builtIn = new Set(
+            Array.from(document.querySelectorAll(".stock h2"))
+                 .map(h => h.textContent.trim().toUpperCase())
+        );
+        if (builtIn.has(ticker) || Object.keys(pending).map(k=>k.toUpperCase()).includes(ticker)) {{
+            showMsg(`⚠️ "${ticker}" is already in your stock list.`, "error");
+            return;
+        }}
+
+        // Persist to localStorage
+        pending[ticker] = {{ name, ticker }};
+        savePending(pending);
+
+        // Render a placeholder card immediately
+        renderPendingStock(name, ticker);
+
+        document.getElementById("newStockName").value   = "";
+        document.getElementById("newStockTicker").value = "";
+        showMsg(`✅ "${name} (${ticker})" added! Price & news will appear on the next scheduled refresh.`, "success");
+    }}
+
+    function renderPendingStock(name, ticker) {{
+        const container = document.querySelector(".container");
+        const existing = document.getElementById("pending-" + ticker);
+        if (existing) return;
+
+        const div = document.createElement("div");
+        div.className = "stock trend-neutral";
+        div.id = "pending-" + ticker;
+        div.innerHTML = `
+            <div class="stock-header">
+                <h2>${{ticker}} <span style="font-size:12px;color:var(--muted)">(${{name}})</span></h2>
+                <div class="price" style="color:var(--muted);font-size:13px;">Pending next refresh</div>
+            </div>
+            <div class="grid">
+                <div class="empty">📌 This stock will appear with live data on the next scheduled update.</div>
+            </div>`;
+        container.appendChild(div);
+    }}
+
+    // On page load: re-render any pending stocks from localStorage
+    window.addEventListener("load", () => {{
+        const pending = getPending();
+        for (const [ticker, info] of Object.entries(pending)) {{
+            const builtIn = Array.from(document.querySelectorAll(".stock h2"))
+                              .map(h => h.textContent.trim().toUpperCase());
+            if (!builtIn.includes(ticker.toUpperCase())) {{
+                renderPendingStock(info.name, ticker);
+            }}
+        }}
+    }});
+    </script>
+
+    <!-- Hidden JSON blob: Python build script reads this to pick up pending stocks -->
+    <script id="pendingStocksData" type="application/json" style="display:none"></script>
+
     </body>
     </html>
     """
@@ -975,11 +1215,43 @@ def main():
     all_data = {}
     global_seen_titles = []
 
-    # --- PHASE 1: Fetch all prices concurrently (yfinance / Yahoo Finance, safe to parallelise) ---
-    print(f"Fetching prices for {len(STOCKS)} stocks concurrently...")
+    # Reload the stock list fresh (picks up any stocks added since module load)
+    stocks_data = load_stocks()
+    stock_keys  = list(stocks_data.keys())
+
+    # Also absorb any pending stocks that were saved from the browser UI.
+    # The build reads public/index.html from the PREVIOUS run and extracts the
+    # hidden <script id="pendingStocksData"> JSON blob so user additions survive.
+    pending = _read_pending_from_previous_build()
+    for ticker, info in pending.items():
+        key = ticker.upper()
+        if key not in stocks_data:
+            # Validate with yfinance before committing
+            yf_ticker = info.get("ticker") or (key + ".NS")
+            try:
+                hist = yf.Ticker(yf_ticker).history(period="1d")
+                if not hist.empty:
+                    stocks_data[key] = {"name": info.get("name", key), "ticker": yf_ticker}
+                    print(f"  Absorbed pending stock: {key} ({yf_ticker})")
+                else:
+                    print(f"  Skipped pending stock {key}: no price data returned.")
+            except Exception as e:
+                print(f"  Skipped pending stock {key}: {e}")
+
+    # Persist any absorbed stocks back to stocks.json
+    save_stocks(stocks_data)
+    # Refresh global list
+    stock_keys = list(stocks_data.keys())
+
+    # Update module-level STOCKS_DATA so helpers (get_stock_data, is_relevant_to_stock) see new entries
+    STOCKS_DATA.clear()
+    STOCKS_DATA.update(stocks_data)
+
+    # --- PHASE 1: Fetch all prices concurrently ---
+    print(f"Fetching prices for {len(stock_keys)} stocks concurrently...")
     prices = {}
     with ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_stock = {executor.submit(get_stock_data, stock): stock for stock in STOCKS}
+        future_to_stock = {executor.submit(get_stock_data, stock): stock for stock in stock_keys}
         for future in as_completed(future_to_stock):
             stock = future_to_stock[future]
             try:
@@ -987,12 +1259,16 @@ def main():
             except Exception as e:
                 print(f"  Price fetch failed for {stock}: {e}")
                 prices[stock] = None
-    print(f"  Prices fetched.")
+    print("  Prices fetched.")
 
     # --- PHASE 2: Fetch news sequentially (Google News RSS is rate-sensitive) ---
-    for stock in STOCKS:
+    for stock in stock_keys:
         print(f"Fetching news: {stock}...")
-        news = fetch_news(stock, global_seen_titles)
+        try:
+            news = fetch_news(stock, global_seen_titles)
+        except Exception as e:
+            print(f"  News fetch failed for {stock}: {e}")
+            news = []
         all_data[stock] = {
             "news": news,
             "price": prices.get(stock)
@@ -1006,6 +1282,34 @@ def main():
         f.write(html)
 
     print("Done → public/index.html")
+
+
+def _read_pending_from_previous_build():
+    """
+    Parse the hidden <script id="pendingStocksData"> JSON blob from the
+    previously generated index.html, so user-added stocks survive rebuilds.
+    Returns a dict of {TICKER: {name, ticker}} or empty dict on any failure.
+    """
+    prev_html = "public/index.html"
+    if not os.path.exists(prev_html):
+        return {}
+    try:
+        import re as _re
+        with open(prev_html, "r", encoding="utf-8") as f:
+            content = f.read()
+        match = _re.search(
+            r'<script[^>]+id="pendingStocksData"[^>]*>(.*?)</script>',
+            content, _re.DOTALL
+        )
+        if not match:
+            return {}
+        raw = match.group(1).strip()
+        if not raw:
+            return {}
+        return json.loads(raw)
+    except Exception as e:
+        print(f"  Could not read pending stocks from previous build: {e}")
+        return {}
 
 
 if __name__ == "__main__":
