@@ -1104,102 +1104,95 @@ def generate_html(all_data):
     </script>
 
     <script>
-    // ---- ADD STOCK (client-side + pending file via fetch to /add_stock endpoint) ----
-    // On static GitHub Pages there is no live server.
-    // Strategy:
-    //   1. Validate inputs in the browser.
-    //   2. Save the new stock to localStorage so it persists across refreshes.
-    //   3. Write a pending_stocks entry that the Python build script picks up
-    //      on the next scheduled run (via a PENDING_STOCKS section in localStorage
-    //      rendered into a hidden JSON blob the script reads — see below).
-    //   4. Immediately render a placeholder card for the new stock.
+    // ---- ADD STOCK ----
+    // Static GitHub Pages has no live server, so additions are:
+    //   1. Validated and shown immediately as placeholder cards via localStorage.
+    //   2. Stored in a hidden JSON blob that the Python build picks up next run.
 
     const PENDING_KEY = "pendingStocks";
 
-    function showMsg(text, type) {{
+    function showMsg(text, type) {
         const el = document.getElementById("addStockMsg");
         el.textContent = text;
         el.className = "add-msg " + type;
         el.style.display = "block";
-        if (type === "success") setTimeout(() => {{ el.style.display = "none"; }}, 5000);
-    }}
+        if (type === "success") setTimeout(() => { el.style.display = "none"; }, 5000);
+    }
 
-    function getPending() {{
-        try {{ return JSON.parse(localStorage.getItem(PENDING_KEY) || "{{}}"); }}
-        catch {{ return {{}}; }}
-    }}
+    function getPending() {
+        try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "{}"); }
+        catch { return {}; }
+    }
 
-    function savePending(obj) {{
+    function savePending(obj) {
         localStorage.setItem(PENDING_KEY, JSON.stringify(obj));
-        // Also update the hidden JSON blob so the next build can read it
+        // Also write into the hidden blob so the next Python build can read it
         const el = document.getElementById("pendingStocksData");
         if (el) el.textContent = JSON.stringify(obj);
-    }}
+    }
 
-    function submitAddStock() {{
+    function submitAddStock() {
         const name   = document.getElementById("newStockName").value.trim();
         const ticker = document.getElementById("newStockTicker").value.trim().toUpperCase();
 
-        if (!name)   {{ showMsg("⚠️ Company name cannot be empty.", "error");   return; }}
-        if (!ticker) {{ showMsg("⚠️ Ticker symbol cannot be empty.", "error"); return; }}
+        if (!name)   { showMsg("⚠️ Company name cannot be empty.", "error");   return; }
+        if (!ticker) { showMsg("⚠️ Ticker symbol cannot be empty.", "error"); return; }
 
         const pending = getPending();
 
-        // Duplicate check against both built-in and pending stocks
+        // Duplicate check against rendered stocks and already-pending stocks
         const builtIn = new Set(
             Array.from(document.querySelectorAll(".stock h2"))
-                 .map(h => h.textContent.trim().toUpperCase())
+                 .map(h => h.textContent.trim().split(" ")[0].toUpperCase())
         );
-        if (builtIn.has(ticker) || Object.keys(pending).map(k=>k.toUpperCase()).includes(ticker)) {{
-            showMsg(`⚠️ "${ticker}" is already in your stock list.`, "error");
+        if (builtIn.has(ticker) || Object.keys(pending).map(k => k.toUpperCase()).includes(ticker)) {
+            showMsg('\u26a0\ufe0f "' + ticker + '" is already in your stock list.', "error");
             return;
-        }}
+        }
 
-        // Persist to localStorage
-        pending[ticker] = {{ name, ticker }};
+        pending[ticker] = { name: name, ticker: ticker };
         savePending(pending);
 
-        // Render a placeholder card immediately
         renderPendingStock(name, ticker);
 
         document.getElementById("newStockName").value   = "";
         document.getElementById("newStockTicker").value = "";
-        showMsg(`✅ "${name} (${ticker})" added! Price & news will appear on the next scheduled refresh.`, "success");
-    }}
+        showMsg('\u2705 "' + name + ' (' + ticker + ')" added! Price & news will appear on the next scheduled refresh.', "success");
+    }
 
-    function renderPendingStock(name, ticker) {{
+    function renderPendingStock(name, ticker) {
         const container = document.querySelector(".container");
-        const existing = document.getElementById("pending-" + ticker);
+        const existing  = document.getElementById("pending-" + ticker);
         if (existing) return;
 
         const div = document.createElement("div");
         div.className = "stock trend-neutral";
         div.id = "pending-" + ticker;
-        div.innerHTML = `
-            <div class="stock-header">
-                <h2>${{ticker}} <span style="font-size:12px;color:var(--muted)">(${{name}})</span></h2>
-                <div class="price" style="color:var(--muted);font-size:13px;">Pending next refresh</div>
-            </div>
-            <div class="grid">
-                <div class="empty">📌 This stock will appear with live data on the next scheduled update.</div>
-            </div>`;
+        div.innerHTML =
+            '<div class="stock-header">' +
+                '<h2>' + ticker + ' <span style="font-size:12px;color:var(--muted)">(' + name + ')</span></h2>' +
+                '<div class="price" style="color:var(--muted);font-size:13px;">Pending next refresh</div>' +
+            '</div>' +
+            '<div class="grid">' +
+                '<div class="empty">\uD83D\uDCCC This stock will appear with live data on the next scheduled update.</div>' +
+            '</div>';
         container.appendChild(div);
-    }}
+    }
 
-    // On page load: re-render any pending stocks from localStorage
-    window.addEventListener("load", () => {{
+    // Re-render pending stocks on every page load
+    window.addEventListener("load", function() {
         const pending = getPending();
-        for (const [ticker, info] of Object.entries(pending)) {{
-            const builtIn = Array.from(document.querySelectorAll(".stock h2"))
-                              .map(h => h.textContent.trim().toUpperCase());
-            if (!builtIn.includes(ticker.toUpperCase())) {{
-                renderPendingStock(info.name, ticker);
-            }}
-        }}
-    }});
+        const builtIn = Array.from(document.querySelectorAll(".stock h2"))
+                            .map(h => h.textContent.trim().split(" ")[0].toUpperCase());
+        for (const ticker in pending) {
+            if (!builtIn.includes(ticker.toUpperCase())) {
+                renderPendingStock(pending[ticker].name, ticker);
+            }
+        }
+    });
     </script>
 
-    <!-- Hidden JSON blob: Python build script reads this to pick up pending stocks -->
+    <!-- Hidden JSON blob: Python build reads this on the next run to absorb pending stocks -->
     <script id="pendingStocksData" type="application/json" style="display:none"></script>
 
     </body>
