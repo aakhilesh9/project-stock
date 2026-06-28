@@ -1123,115 +1123,90 @@ def generate_html(all_data, stocks_data):
     }});
     </script>
 
-    <script>
-    // ---- ADD STOCK via GitHub Contents API ----
-    // Writes stocks.json directly to the repo so the next build picks it up.
-    // The user provides a short-lived GitHub PAT (repo scope) each time they add a stock.
-    // The token is used for one API call and is never stored anywhere.
-
-    const REPO_OWNER = "{gh_owner}";
-    const REPO_NAME  = "{gh_repo}";
-    const STOCKS_PATH = "stocks.json";
-
-    // Current stocks.json content is embedded at build time so we can update it
-    const CURRENT_STOCKS = {stocks_json_embedded};
-
-    function showMsg(text, type) {{
-        const el = document.getElementById("addStockMsg");
-        el.textContent = text;
-        el.className = "add-msg " + type;
-        el.style.display = "block";
-        if (type !== "success") return;
-        setTimeout(() => {{ el.style.display = "none"; }}, 8000);
-    }}
-
-    async function submitAddStock() {{
-        const name   = document.getElementById("newStockName").value.trim();
-        const ticker = document.getElementById("newStockTicker").value.trim().toUpperCase();
-        const token  = document.getElementById("ghToken").value.trim();
-
-        if (!name)   {{ showMsg("Company name cannot be empty.", "error");   return; }}
-        if (!ticker) {{ showMsg("Ticker symbol cannot be empty.", "error");  return; }}
-        if (!token)  {{ showMsg("GitHub PAT is required to save the stock.", "error"); return; }}
-
-        // Duplicate check
-        if (CURRENT_STOCKS[ticker]) {{
-            showMsg('"' + ticker + '" is already in your stock list.', "error");
-            return;
-        }}
-
-        const btn = document.getElementById("addStockBtn");
-        btn.disabled = true;
-        btn.textContent = "Saving...";
-        showMsg("Committing stocks.json to repo...", "info");
-
-        try {{
-            // 1. Get the current file SHA (required for the update API)
-            const metaRes = await fetch(
-                "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STOCKS_PATH,
-                {{ headers: {{ Authorization: "token " + token, Accept: "application/vnd.github+json" }} }}
-            );
-            if (!metaRes.ok) {{
-                const err = await metaRes.json();
-                throw new Error("Could not fetch stocks.json from GitHub: " + (err.message || metaRes.status));
-            }}
-            const meta = await metaRes.json();
-            const fileSha = meta.sha;
-
-            // 2. Build the updated stocks object
-            const updated = Object.assign({{}}, CURRENT_STOCKS);
-            const yfTicker = ticker.includes(".") ? ticker : ticker + ".NS";
-            updated[ticker] = {{ name: name, ticker: yfTicker }};
-
-            // 3. Commit the updated file
-            const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));
-            const putRes = await fetch(
-                "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STOCKS_PATH,
-                {{
-                    method: "PUT",
-                    headers: {{ Authorization: "token " + token, Accept: "application/vnd.github+json", "Content-Type": "application/json" }},
-                    body: JSON.stringify({{
-                        message: "Add stock: " + ticker + " (" + name + ")",
-                        content: content,
-                        sha: fileSha
-                    }})
-                }}
-            );
-            if (!putRes.ok) {{
-                const err = await putRes.json();
-                throw new Error("GitHub commit failed: " + (err.message || putRes.status));
-            }}
-
-            // Clear inputs (do NOT store the token anywhere)
-            document.getElementById("newStockName").value   = "";
-            document.getElementById("newStockTicker").value = "";
-            document.getElementById("ghToken").value        = "";
-
-            showMsg(
-                ticker + " (" + name + ") saved to stocks.json. " +
-                "Trigger the workflow on GitHub Actions to see it with live data.",
-                "success"
-            );
-
-        }} catch(e) {{
-            showMsg("Error: " + e.message, "error");
-        }} finally {{
-            btn.disabled = false;
-            btn.textContent = "Add Stock";
-        }}
-    }}
-    </script>
+    %%ADD_STOCK_SCRIPT%%
 
     </body>
     </html>
     """
 
-    # Substitute repo config and current stocks into the JS placeholders
-    html = html.replace("{gh_owner}", gh_owner)
-    html = html.replace("{gh_repo}", gh_repo)
-    html = html.replace("{stocks_json_embedded}", stocks_json_embedded)
+    # Build the Add Stock script as a plain Python string (no f-string, no brace escaping)
+    add_stock_script = (
+        '<script>\n'
+        '    const REPO_OWNER = "' + gh_owner + '";\n'
+        '    const REPO_NAME  = "' + gh_repo + '";\n'
+        '    const STOCKS_PATH = "stocks.json";\n'
+        '    const CURRENT_STOCKS = ' + stocks_json_embedded + ';\n'
+        '\n'
+        '    function showMsg(text, type) {\n'
+        '        const el = document.getElementById("addStockMsg");\n'
+        '        el.textContent = text;\n'
+        '        el.className = "add-msg " + type;\n'
+        '        el.style.display = "block";\n'
+        '        if (type === "success") setTimeout(function() { el.style.display = "none"; }, 8000);\n'
+        '    }\n'
+        '\n'
+        '    async function submitAddStock() {\n'
+        '        const name   = document.getElementById("newStockName").value.trim();\n'
+        '        const ticker = document.getElementById("newStockTicker").value.trim().toUpperCase();\n'
+        '        const token  = document.getElementById("ghToken").value.trim();\n'
+        '\n'
+        '        if (!name)   { showMsg("Company name cannot be empty.", "error");              return; }\n'
+        '        if (!ticker) { showMsg("Ticker symbol cannot be empty.", "error");             return; }\n'
+        '        if (!token)  { showMsg("GitHub PAT is required to save the stock.", "error"); return; }\n'
+        '\n'
+        '        if (CURRENT_STOCKS[ticker]) {\n'
+        '            showMsg(ticker + " is already in your stock list.", "error");\n'
+        '            return;\n'
+        '        }\n'
+        '\n'
+        '        const btn = document.getElementById("addStockBtn");\n'
+        '        btn.disabled = true;\n'
+        '        btn.textContent = "Saving...";\n'
+        '        showMsg("Committing stocks.json to repo...", "info");\n'
+        '\n'
+        '        try {\n'
+        '            const apiBase = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + STOCKS_PATH;\n'
+        '            const headers = { Authorization: "token " + token, Accept: "application/vnd.github+json" };\n'
+        '\n'
+        '            const metaRes = await fetch(apiBase, { headers: headers });\n'
+        '            if (!metaRes.ok) {\n'
+        '                const err = await metaRes.json();\n'
+        '                throw new Error("Could not read stocks.json: " + (err.message || metaRes.status));\n'
+        '            }\n'
+        '            const meta = await metaRes.json();\n'
+        '\n'
+        '            const updated = Object.assign({}, CURRENT_STOCKS);\n'
+        '            const yfTicker = ticker.includes(".") ? ticker : ticker + ".NS";\n'
+        '            updated[ticker] = { name: name, ticker: yfTicker };\n'
+        '\n'
+        '            const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));\n'
+        '            const putRes = await fetch(apiBase, {\n'
+        '                method: "PUT",\n'
+        '                headers: Object.assign({ "Content-Type": "application/json" }, headers),\n'
+        '                body: JSON.stringify({ message: "Add stock: " + ticker + " (" + name + ")", content: content, sha: meta.sha })\n'
+        '            });\n'
+        '            if (!putRes.ok) {\n'
+        '                const err = await putRes.json();\n'
+        '                throw new Error("GitHub commit failed: " + (err.message || putRes.status));\n'
+        '            }\n'
+        '\n'
+        '            document.getElementById("newStockName").value   = "";\n'
+        '            document.getElementById("newStockTicker").value = "";\n'
+        '            document.getElementById("ghToken").value        = "";\n'
+        '            showMsg(ticker + " (" + name + ") saved! Run the GitHub Actions workflow to see live data.", "success");\n'
+        '\n'
+        '        } catch(e) {\n'
+        '            showMsg("Error: " + e.message, "error");\n'
+        '        } finally {\n'
+        '            btn.disabled = false;\n'
+        '            btn.textContent = "Add Stock";\n'
+        '        }\n'
+        '    }\n'
+        '</script>\n'
+    )
+    html = html.replace("%%ADD_STOCK_SCRIPT%%", add_stock_script)
 
-    return html
+
 
 
 # ----------- MAIN -----------
