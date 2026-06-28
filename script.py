@@ -13,40 +13,40 @@ STOCKS_FILE = "stocks.json"
 
 # Default stocks loaded if stocks.json does not exist yet
 DEFAULT_STOCKS = {
-    "ANGELONE":   {"name": "Angel One",              "ticker": "ANGELONE.NS"},
-    "ASIANPAINT": {"name": "Asian Paints",            "ticker": "ASIANPAINT.NS"},
-    "BAJAJFINANCE":{"name": "Bajaj Finance",          "ticker": "BAJFINANCE.NS"},
-    "COALINDIA":  {"name": "Coal India",              "ticker": "COALINDIA.NS"},
-    "DIVISLAB":   {"name": "Divi's Laboratories",     "ticker": "DIVISLAB.NS"},
-    "DIXON":      {"name": "Dixon Technologies",      "ticker": "DIXON.NS"},
-    "EPIGRAL":    {"name": "Epigral",                 "ticker": "EPIGRAL.NS"},
-    "FCL":        {"name": "Fineotex Chemical",       "ticker": "FCL.NS"},
-    "GAIL":       {"name": "GAIL India",              "ticker": "GAIL.NS"},
-    "HDBFS":      {"name": "HDB Financial Services",  "ticker": "HDBFS.NS"},
-    "HDFC BANK":  {"name": "HDFC Bank",               "ticker": "HDFCBANK.NS"},
-    "ICICI BANK": {"name": "ICICI Bank",              "ticker": "ICICIBANK.NS"},
-    "INFOSYS":    {"name": "Infosys",                 "ticker": "INFY.NS"},
-    "ITC":        {"name": "ITC",                     "ticker": "ITC.NS"},
-    "KIRLOSENG":  {"name": "Kirloskar Oil Engines",   "ticker": "KIRLOSENG.NS"},
-    "KOTAKBANK":  {"name": "Kotak Mahindra Bank",     "ticker": "KOTAKBANK.NS"},
-    "LAURUSLABS": {"name": "Laurus Labs",             "ticker": "LAURUSLABS.NS"},
-    "MANKIND":    {"name": "Mankind Pharma",          "ticker": "MANKIND.NS"},
-    "MARICO":     {"name": "Marico",                  "ticker": "MARICO.NS"},
-    "NTPC":       {"name": "NTPC",                    "ticker": "NTPC.NS"},
-    "PETRONET":   {"name": "Petronet LNG",            "ticker": "PETRONET.NS"},
-    "PFC":        {"name": "Power Finance Corporation","ticker": "PFC.NS"},
-    "PIIND":      {"name": "PI Industries",           "ticker": "PIIND.NS"},
-    "POLYCAB":    {"name": "Polycab India",           "ticker": "POLYCAB.NS"},
-    "POONAWALLA": {"name": "Poonawalla Fincorp",      "ticker": "POONAWALLA.NS"},
-    "RELIANCE":   {"name": "Reliance Industries",     "ticker": "RELIANCE.NS"},
-    "SBIN":       {"name": "State Bank of India",     "ticker": "SBIN.NS"},
-    "STYLAMIND":  {"name": "Stylam Industries",       "ticker": "STYLAMIND.NS"},
-    "TCS":        {"name": "Tata Consultancy Services","ticker": "TCS.NS"},
-    "TMPV":       {"name": "Tata Motors PV",          "ticker": "TMPV.NS"},
-    "TMCV":       {"name": "Tata Motors CV",          "ticker": "TMCV.NS"},
-    "TRIVENI":    {"name": "Triveni Engineering",     "ticker": "TRIVENI.NS"},
-    "VBL":        {"name": "Varun Beverages",         "ticker": "VBL.NS"},
-    "ZENTEC":     {"name": "Zen Technologies",        "ticker": "ZENTEC.NS"},
+    "ANGELONE":    {"name": "Angel One",               "ticker": "ANGELONE.NS",   "keywords": ["angel one", "angelone", "angel broking"]},
+    "ASIANPAINT":  {"name": "Asian Paints",            "ticker": "ASIANPAINT.NS", "keywords": ["asian paints", "asian paint"]},
+    "BAJAJFINANCE":{"name": "Bajaj Finance",           "ticker": "BAJFINANCE.NS", "keywords": ["bajaj finance", "bajajfinance"]},
+    "COALINDIA":   {"name": "Coal India",              "ticker": "COALINDIA.NS",  "keywords": ["coal india", "coal india limited"]},
+    "DIVISLAB":    {"name": "Divi's Laboratories",    "ticker": "DIVISLAB.NS",   "keywords": ["divi's", "divis", "divis labs", "divis laboratories"]},
+    "DIXON":       {"name": "Dixon Technologies",      "ticker": "DIXON.NS",      "keywords": ["dixon", "dixon technologies", "dixon tech"]},
+    "EPIGRAL":     {"name": "Epigral",                 "ticker": "EPIGRAL.NS",    "keywords": ["epigral"]},
+    "FCL":         {"name": "Fineotex Chemical",       "ticker": "FCL.NS",        "keywords": ["fineotex", "fineotex chemical"]},
+    "GAIL":        {"name": "GAIL India",              "ticker": "GAIL.NS",       "keywords": ["gail", "gail india", "gas authority of india"]},
+    "HDBFS":       {"name": "HDB Financial Services",  "ticker": "HDBFS.NS",      "keywords": ["hdbfs", "hdb financial", "hdfc financial"]},
+    "HDFC BANK":   {"name": "HDFC Bank",               "ticker": "HDFCBANK.NS",   "keywords": ["hdfc bank", "hdfc"]},
+    "ICICI BANK":  {"name": "ICICI Bank",              "ticker": "ICICIBANK.NS",  "keywords": ["icici bank", "icici"]},
+    "INFOSYS":     {"name": "Infosys",                 "ticker": "INFY.NS",       "keywords": ["infosys", "infy"]},
+    "ITC":         {"name": "ITC",                     "ticker": "ITC.NS",        "keywords": ["itc", "itc ltd"]},
+    "KIRLOSENG":   {"name": "Kirloskar Oil Engines",   "ticker": "KIRLOSENG.NS",  "keywords": ["kirloskar oil", "kirloskar oil engines", "kirloseng"]},
+    "KOTAKBANK":   {"name": "Kotak Mahindra Bank",     "ticker": "KOTAKBANK.NS",  "keywords": ["kotak bank", "kotak mahindra", "kotak"]},
+    "LAURUSLABS":  {"name": "Laurus Labs",             "ticker": "LAURUSLABS.NS", "keywords": ["laurus labs", "laurus"]},
+    "MANKIND":     {"name": "Mankind Pharma",          "ticker": "MANKIND.NS",    "keywords": ["mankind pharma", "mankind"]},
+    "MARICO":      {"name": "Marico",                  "ticker": "MARICO.NS",     "keywords": ["marico"]},
+    "NTPC":        {"name": "NTPC",                    "ticker": "NTPC.NS",       "keywords": ["ntpc"]},
+    "PETRONET":    {"name": "Petronet LNG",            "ticker": "PETRONET.NS",   "keywords": ["petronet lng", "petronet"]},
+    "PFC":         {"name": "Power Finance Corporation","ticker": "PFC.NS",       "keywords": ["power finance corporation", "pfc"]},
+    "PIIND":       {"name": "PI Industries",           "ticker": "PIIND.NS",      "keywords": ["pi industries", "pi ind"]},
+    "POLYCAB":     {"name": "Polycab India",           "ticker": "POLYCAB.NS",    "keywords": ["polycab"]},
+    "POONAWALLA":  {"name": "Poonawalla Fincorp",      "ticker": "POONAWALLA.NS", "keywords": ["poonawalla fincorp", "poonawalla"]},
+    "RELIANCE":    {"name": "Reliance Industries",     "ticker": "RELIANCE.NS",   "keywords": ["reliance", "ril", "mukesh ambani"]},
+    "SBIN":        {"name": "State Bank of India",     "ticker": "SBIN.NS",       "keywords": ["state bank of india", "sbi", "sbin"]},
+    "STYLAMIND":   {"name": "Stylam Industries",       "ticker": "STYLAMIND.NS",  "keywords": ["stylam industries", "stylam"]},
+    "TCS":         {"name": "Tata Consultancy Services","ticker": "TCS.NS",       "keywords": ["tcs", "tata consultancy"]},
+    "TMPV":        {"name": "Tata Motors PV",          "ticker": "TMPV.NS",       "keywords": ["tata motors"]},
+    "TMCV":        {"name": "Tata Motors CV",          "ticker": "TMCV.NS",       "keywords": ["tata motors"]},
+    "TRIVENI":     {"name": "Triveni Engineering",     "ticker": "TRIVENI.NS",    "keywords": ["triveni engineering", "triveni engg"]},
+    "VBL":         {"name": "Varun Beverages",         "ticker": "VBL.NS",        "keywords": ["varun beverages", "vbl"]},
+    "ZENTEC":      {"name": "Zen Technologies",        "ticker": "ZENTEC.NS",     "keywords": ["zen technologies", "zen tech", "zentec"]},
 }
 
 
@@ -155,75 +155,7 @@ SIMILARITY_THRESHOLD = 70
 MAX_NEWS = 7
 DAYS_LIMIT = 7
 
-STOCK_KEYWORDS = {
-    "ANGELONE": ["angel one", "angelone", "angel broking"],
-    
-    "ASIANPAINT": ["asianpain","asian paints", "Asian paint stock", "asian paints share"],
-    
-    "BAJAJFINANCE": ["bajajfinance","bajaj finance", "BAJAJFINANCE stock"],
-    
-    "COALINDIA": ["coal india", "Coal India stock", "coal india limited"],
-    
-    "DIVISLAB": ["divi's", "divis", "divi's labs", "divis labs", "divis laboratories", "divis labs stock", "divis labs share"],
-    
-    "DIXON": ["dixon","dixon technologies", "dixon tech"],
-    
-    "EPIGRAL": ["epigral", "epigral ltd"],
-    
-    "FCL": ["fineotex", "fineotex chemical", "fineotex share"],
-    
-    "GAIL": ["gail", "gail india", "Gas authority of India"],
-    
-    "HDBFS":["hdbfs","HDB Financial", "hdfc financial"],
-
-    "HDFC BANK": ["hdfc bank", "hdfc"],
-    
-    "ICICI BANK": ["icici bank", "icici"],
-    
-    "INFOSYS": ["infosys", "infy"],
-    
-    "ITC": ["itc", "itc stock","itc share"],
-    
-    "KIRLOSENG": ["kirloseng","kirloskar oil", "kirloskar oil engines"],
-    
-    "KOTAKBANK": ["kotakbank","kotak bank", "kotak mahindra bank", "kotak"],
-    
-    "LAURUSLABS": ["laurus labs", "laurus", "lauruslabs"],
-    
-    "MANKIND": ["mankind pharma", "mankind"],
-    
-    "MARICO": ["marico"],
-    
-    "NTPC": ["ntpc"],
-    
-    "PETRONET": ["petronet lng", "petronet"],
-    
-    "PFC": ["power finance corporation", "pfc"],
-    
-    "PIIND": ["P I industries","pi industries", "pi ind"],
-    
-    "POLYCAB": ["polycab"],
-    
-    "POONAWALLA": ["poonawalla fincorp", "poonawalla"],
-    
-    "RELIANCE": ["reliance", "ril", "mukesh ambani"],
-    
-    "SBIN": ["sbin", "state bank of india"],
-    
-    "STYLAMIND": ["stylamind","stylam industries", "stylam"],
-    
-    "TCS": ["tcs", "tata consultancy services"],
-    
-    "TMPV":["Tata motors", "TPMV"],
-
-    "TMCV": ["Tata motors", "TMCV"],
-
-    "TRIVENI": ["triveni engg", "triveni engineering"],
-    
-    "VBL": ["varun beverages", "vbl"],
-    
-    "ZENTEC": ["zen technologies", "zen tech", "zentech", "zentec", "zentec.ns", "ZEN Technologies Ltd"]
-}
+# Keywords are now stored in stocks.json under each stock entry
 
 # ----------- PRICE FETCH -----------
 def get_stock_data(stock):
@@ -318,18 +250,12 @@ def normalize(text):
 
 def is_relevant_to_stock(title, stock):
     title_norm = normalize(title)
-
-    # Use manually curated keywords when available; otherwise derive from stored name/ticker
-    if stock in STOCK_KEYWORDS:
-        keywords = STOCK_KEYWORDS[stock]
-    else:
-        entry = STOCKS_DATA.get(stock, {})
-        keywords = [entry.get("name", stock), stock]
-
+    entry = STOCKS_DATA.get(stock, {})
+    # Keywords stored in stocks.json; fall back to name + ticker key
+    keywords = entry.get("keywords") or [entry.get("name", stock), stock]
     for kw in keywords:
         if normalize(kw) in title_norm:
             return True
-
     return False
 
 # ----------- NEWS FETCH -----------
@@ -448,12 +374,13 @@ def generate_html(all_data, stocks_data):
     }}
 
     body.light {{
-        --bg: #f5f5f5;
+        --bg: #f0f2f5;
         --text: #1e293b;
         --card: #ffffff;
-        --muted: #555;
+        --muted: #64748b;
         --accent: #2563eb;
-        --border: #ddd;
+        --border: #d1d5db;
+        --source-text: #ffffff;
     }}
 
     body {{
@@ -482,6 +409,35 @@ def generate_html(all_data, stocks_data):
         padding: 6px 12px;
         border-radius: 8px;
         cursor: pointer;
+    }}
+
+    /* ---- LIGHT THEME OVERRIDES ---- */
+    body.light button {{
+        background: #e2e8f0;
+        color: #1e293b;
+        border-color: #cbd5e1;
+    }}
+
+    body.light .add-input {{
+        background: #f8fafc;
+        color: #1e293b;
+        border-color: #cbd5e1;
+    }}
+
+    body.light .add-input::placeholder {{
+        color: #94a3b8;
+    }}
+
+    body.light .summary-table thead tr {{
+        color: #1e293b;
+    }}
+
+    body.light .card a {{
+        color: #1e293b;
+    }}
+
+    body.light .stock h2 {{
+        color: #1e293b;
     }}
 
     .updated {{
@@ -564,7 +520,7 @@ def generate_html(all_data, stocks_data):
     .source {{
         font-size: 11px;
         background: var(--accent);
-        color: white;
+        color: var(--source-text, white);
         padding: 2px 6px;
         border-radius: 6px;
         margin-left: 6px;
@@ -821,6 +777,33 @@ def generate_html(all_data, stocks_data):
         color: var(--accent);
         border: 1px solid rgba(56,189,248,0.3);
     }}
+
+    /* ---- USER-ADDED STOCK BADGE ---- */
+    .stock.user-added {{
+        border-left-color: #8b5cf6 !important;
+        background: linear-gradient(90deg, rgba(139,92,246,0.04) 0%, transparent 60%);
+    }}
+
+    .user-added-badge {{
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 600;
+        background: rgba(139,92,246,0.15);
+        color: #8b5cf6;
+        border: 1px solid rgba(139,92,246,0.35);
+        border-radius: 5px;
+        padding: 1px 7px;
+        vertical-align: middle;
+        letter-spacing: 0.04em;
+        margin-left: 4px;
+    }}
+
+    .stock-company-name {{
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--muted);
+        margin-left: 6px;
+    }}
     </style>
     </head>
 
@@ -839,14 +822,15 @@ def generate_html(all_data, stocks_data):
     <div class="add-stock-panel" id="addStockPanel">
         <h3 style="margin:0 0 10px">➕ Add New Stock</h3>
         <div class="add-stock-form">
-            <input id="newStockName"   type="text"      placeholder="Company Name (e.g. Tata Steel)"  class="add-input" />
-            <input id="newStockTicker" type="text"      placeholder="NSE Ticker (e.g. TATASTEEL)"      class="add-input" />
-            <input id="ghToken"        type="password"  placeholder="GitHub PAT (repo scope)"          class="add-input" style="flex:1 1 200px" />
+            <input id="newStockName"     type="text"     placeholder="Company Name (e.g. Tata Steel)"           class="add-input" />
+            <input id="newStockTicker"   type="text"     placeholder="NSE Ticker (e.g. TATASTEEL)"              class="add-input" />
+            <input id="newStockKeywords" type="text"     placeholder="Keywords for news, comma-separated (optional)" class="add-input" style="flex:2 1 260px" />
+            <input id="ghToken"          type="password" placeholder="GitHub PAT (repo scope)"                  class="add-input" style="flex:1 1 180px" />
             <button id="addStockBtn" onclick="submitAddStock()">Add Stock</button>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:6px;">
-            Token is used once to commit stocks.json to your repo. It is never stored or sent anywhere else.<br>
-            Create one at <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">github.com/settings/tokens</a> with <strong>repo</strong> scope.
+            <strong>Keywords</strong> control which news articles appear for this stock (e.g. <em>tata steel, tatasteel, tata steel share</em>). Leave blank to use the company name.<br>
+            Token is used once to commit stocks.json. Create at <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">github.com/settings/tokens</a> with <strong>repo</strong> scope.
         </div>
         <div id="addStockMsg" class="add-msg" style="display:none"></div>
     </div>
@@ -962,10 +946,17 @@ def generate_html(all_data, stocks_data):
             price_html = '<div class="price">N/A</div>'
             trend_class = "trend-neutral"
 
+        entry = stocks_data.get(stock, {})
+        company_name = entry.get("name", "")
+        user_added = entry.get("user_added", False)
+        extra_class = " user-added" if user_added else ""
+        badge_html = '<span class="user-added-badge">Custom</span>' if user_added else ""
+        name_sub = f'<span class="stock-company-name">{company_name}</span>' if company_name and company_name.upper() != stock else ""
+
         html += f"""
-        <div class="stock {trend_class}">
+        <div class="stock {trend_class}{extra_class}">
             <div class="stock-header">
-                <h2>{stock}</h2>
+                <h2>{stock} {badge_html} {name_sub}</h2>
                 {price_html}
             </div>
             <div class="grid">
@@ -1146,9 +1137,11 @@ def generate_html(all_data, stocks_data):
         '    }\n'
         '\n'
         '    async function submitAddStock() {\n'
-        '        const name   = document.getElementById("newStockName").value.trim();\n'
-        '        const ticker = document.getElementById("newStockTicker").value.trim().toUpperCase();\n'
-        '        const token  = document.getElementById("ghToken").value.trim();\n'
+        '        const name     = document.getElementById("newStockName").value.trim();\n'
+        '        const ticker   = document.getElementById("newStockTicker").value.trim().toUpperCase();\n'
+        '        const kwRaw    = document.getElementById("newStockKeywords").value.trim();\n'
+        '        const token    = document.getElementById("ghToken").value.trim();\n'
+        '        const keywords = kwRaw ? kwRaw.split(",").map(k => k.trim().toLowerCase()).filter(Boolean) : [name.toLowerCase()];\n'
         '\n'
         '        if (!name)   { showMsg("Company name cannot be empty.", "error");              return; }\n'
         '        if (!ticker) { showMsg("Ticker symbol cannot be empty.", "error");             return; }\n'
@@ -1177,7 +1170,7 @@ def generate_html(all_data, stocks_data):
         '\n'
         '            const updated = Object.assign({}, CURRENT_STOCKS);\n'
         '            const yfTicker = ticker.includes(".") ? ticker : ticker + ".NS";\n'
-        '            updated[ticker] = { name: name, ticker: yfTicker };\n'
+        '            updated[ticker] = { name: name, ticker: yfTicker, keywords: keywords, user_added: true };\n'
         '\n'
         '            const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));\n'
         '            const putRes = await fetch(apiBase, {\n'
@@ -1190,9 +1183,10 @@ def generate_html(all_data, stocks_data):
         '                throw new Error("GitHub commit failed: " + (err.message || putRes.status));\n'
         '            }\n'
         '\n'
-        '            document.getElementById("newStockName").value   = "";\n'
-        '            document.getElementById("newStockTicker").value = "";\n'
-        '            document.getElementById("ghToken").value        = "";\n'
+        '            document.getElementById("newStockName").value     = "";\n'
+        '            document.getElementById("newStockTicker").value   = "";\n'
+        '            document.getElementById("newStockKeywords").value = "";\n'
+        '            document.getElementById("ghToken").value          = "";\n'
         '            showMsg(ticker + " (" + name + ") saved! Run the GitHub Actions workflow to see live data.", "success");\n'
         '\n'
         '        } catch(e) {\n'

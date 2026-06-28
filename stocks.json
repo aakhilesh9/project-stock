@@ -1,36 +1,279 @@
 {
-  "ANGELONE": { "name": "Angel One", "ticker": "ANGELONE.NS" },
-  "ASIANPAINT": { "name": "Asian Paints", "ticker": "ASIANPAINT.NS" },
-  "BAJAJFINANCE": { "name": "Bajaj Finance", "ticker": "BAJFINANCE.NS" },
-  "COALINDIA": { "name": "Coal India", "ticker": "COALINDIA.NS" },
-  "DIVISLAB": { "name": "Divi's Laboratories", "ticker": "DIVISLAB.NS" },
-  "DIXON": { "name": "Dixon Technologies", "ticker": "DIXON.NS" },
-  "EPIGRAL": { "name": "Epigral", "ticker": "EPIGRAL.NS" },
-  "FCL": { "name": "Fineotex Chemical", "ticker": "FCL.NS" },
-  "GAIL": { "name": "GAIL India", "ticker": "GAIL.NS" },
-  "HDBFS": { "name": "HDB Financial Services", "ticker": "HDBFS.NS" },
-  "HDFC BANK": { "name": "HDFC Bank", "ticker": "HDFCBANK.NS" },
-  "ICICI BANK": { "name": "ICICI Bank", "ticker": "ICICIBANK.NS" },
-  "INFOSYS": { "name": "Infosys", "ticker": "INFY.NS" },
-  "ITC": { "name": "ITC", "ticker": "ITC.NS" },
-  "KIRLOSENG": { "name": "Kirloskar Oil Engines", "ticker": "KIRLOSENG.NS" },
-  "KOTAKBANK": { "name": "Kotak Mahindra Bank", "ticker": "KOTAKBANK.NS" },
-  "LAURUSLABS": { "name": "Laurus Labs", "ticker": "LAURUSLABS.NS" },
-  "MANKIND": { "name": "Mankind Pharma", "ticker": "MANKIND.NS" },
-  "MARICO": { "name": "Marico", "ticker": "MARICO.NS" },
-  "NTPC": { "name": "NTPC", "ticker": "NTPC.NS" },
-  "PETRONET": { "name": "Petronet LNG", "ticker": "PETRONET.NS" },
-  "PFC": { "name": "Power Finance Corporation", "ticker": "PFC.NS" },
-  "PIIND": { "name": "PI Industries", "ticker": "PIIND.NS" },
-  "POLYCAB": { "name": "Polycab India", "ticker": "POLYCAB.NS" },
-  "POONAWALLA": { "name": "Poonawalla Fincorp", "ticker": "POONAWALLA.NS" },
-  "RELIANCE": { "name": "Reliance Industries", "ticker": "RELIANCE.NS" },
-  "SBIN": { "name": "State Bank of India", "ticker": "SBIN.NS" },
-  "STYLAMIND": { "name": "Stylam Industries", "ticker": "STYLAMIND.NS" },
-  "TCS": { "name": "Tata Consultancy Services", "ticker": "TCS.NS" },
-  "TMPV": { "name": "Tata Motors PV", "ticker": "TMPV.NS" },
-  "TMCV": { "name": "Tata Motors CV", "ticker": "TMCV.NS" },
-  "TRIVENI": { "name": "Triveni Engineering", "ticker": "TRIVENI.NS" },
-  "VBL": { "name": "Varun Beverages", "ticker": "VBL.NS" },
-  "ZENTEC": { "name": "Zen Technologies", "ticker": "ZENTEC.NS" }
+  "ANGELONE": {
+    "name": "Angel One",
+    "ticker": "ANGELONE.NS",
+    "keywords": [
+      "angel one",
+      "angelone",
+      "angel broking"
+    ]
+  },
+  "ASIANPAINT": {
+    "name": "Asian Paints",
+    "ticker": "ASIANPAINT.NS",
+    "keywords": [
+      "asian paints",
+      "asian paint"
+    ]
+  },
+  "BAJAJFINANCE": {
+    "name": "Bajaj Finance",
+    "ticker": "BAJFINANCE.NS",
+    "keywords": [
+      "bajaj finance",
+      "bajajfinance"
+    ]
+  },
+  "COALINDIA": {
+    "name": "Coal India",
+    "ticker": "COALINDIA.NS",
+    "keywords": [
+      "coal india",
+      "coal india limited"
+    ]
+  },
+  "DIVISLAB": {
+    "name": "Divi's Laboratories",
+    "ticker": "DIVISLAB.NS",
+    "keywords": [
+      "divi's",
+      "divis",
+      "divis labs",
+      "divis laboratories"
+    ]
+  },
+  "DIXON": {
+    "name": "Dixon Technologies",
+    "ticker": "DIXON.NS",
+    "keywords": [
+      "dixon",
+      "dixon technologies",
+      "dixon tech"
+    ]
+  },
+  "EPIGRAL": {
+    "name": "Epigral",
+    "ticker": "EPIGRAL.NS",
+    "keywords": [
+      "epigral"
+    ]
+  },
+  "FCL": {
+    "name": "Fineotex Chemical",
+    "ticker": "FCL.NS",
+    "keywords": [
+      "fineotex",
+      "fineotex chemical"
+    ]
+  },
+  "GAIL": {
+    "name": "GAIL India",
+    "ticker": "GAIL.NS",
+    "keywords": [
+      "gail",
+      "gail india",
+      "gas authority of india"
+    ]
+  },
+  "HDBFS": {
+    "name": "HDB Financial Services",
+    "ticker": "HDBFS.NS",
+    "keywords": [
+      "hdbfs",
+      "hdb financial",
+      "hdfc financial"
+    ]
+  },
+  "HDFC BANK": {
+    "name": "HDFC Bank",
+    "ticker": "HDFCBANK.NS",
+    "keywords": [
+      "hdfc bank",
+      "hdfc"
+    ]
+  },
+  "ICICI BANK": {
+    "name": "ICICI Bank",
+    "ticker": "ICICIBANK.NS",
+    "keywords": [
+      "icici bank",
+      "icici"
+    ]
+  },
+  "INFOSYS": {
+    "name": "Infosys",
+    "ticker": "INFY.NS",
+    "keywords": [
+      "infosys",
+      "infy"
+    ]
+  },
+  "ITC": {
+    "name": "ITC",
+    "ticker": "ITC.NS",
+    "keywords": [
+      "itc",
+      "itc ltd"
+    ]
+  },
+  "KIRLOSENG": {
+    "name": "Kirloskar Oil Engines",
+    "ticker": "KIRLOSENG.NS",
+    "keywords": [
+      "kirloskar oil",
+      "kirloskar oil engines",
+      "kirloseng"
+    ]
+  },
+  "KOTAKBANK": {
+    "name": "Kotak Mahindra Bank",
+    "ticker": "KOTAKBANK.NS",
+    "keywords": [
+      "kotak bank",
+      "kotak mahindra",
+      "kotak"
+    ]
+  },
+  "LAURUSLABS": {
+    "name": "Laurus Labs",
+    "ticker": "LAURUSLABS.NS",
+    "keywords": [
+      "laurus labs",
+      "laurus"
+    ]
+  },
+  "MANKIND": {
+    "name": "Mankind Pharma",
+    "ticker": "MANKIND.NS",
+    "keywords": [
+      "mankind pharma",
+      "mankind"
+    ]
+  },
+  "MARICO": {
+    "name": "Marico",
+    "ticker": "MARICO.NS",
+    "keywords": [
+      "marico"
+    ]
+  },
+  "NTPC": {
+    "name": "NTPC",
+    "ticker": "NTPC.NS",
+    "keywords": [
+      "ntpc"
+    ]
+  },
+  "PETRONET": {
+    "name": "Petronet LNG",
+    "ticker": "PETRONET.NS",
+    "keywords": [
+      "petronet lng",
+      "petronet"
+    ]
+  },
+  "PFC": {
+    "name": "Power Finance Corporation",
+    "ticker": "PFC.NS",
+    "keywords": [
+      "power finance corporation",
+      "pfc"
+    ]
+  },
+  "PIIND": {
+    "name": "PI Industries",
+    "ticker": "PIIND.NS",
+    "keywords": [
+      "pi industries",
+      "pi ind"
+    ]
+  },
+  "POLYCAB": {
+    "name": "Polycab India",
+    "ticker": "POLYCAB.NS",
+    "keywords": [
+      "polycab"
+    ]
+  },
+  "POONAWALLA": {
+    "name": "Poonawalla Fincorp",
+    "ticker": "POONAWALLA.NS",
+    "keywords": [
+      "poonawalla fincorp",
+      "poonawalla"
+    ]
+  },
+  "RELIANCE": {
+    "name": "Reliance Industries",
+    "ticker": "RELIANCE.NS",
+    "keywords": [
+      "reliance",
+      "ril",
+      "mukesh ambani"
+    ]
+  },
+  "SBIN": {
+    "name": "State Bank of India",
+    "ticker": "SBIN.NS",
+    "keywords": [
+      "state bank of india",
+      "sbi",
+      "sbin"
+    ]
+  },
+  "STYLAMIND": {
+    "name": "Stylam Industries",
+    "ticker": "STYLAMIND.NS",
+    "keywords": [
+      "stylam industries",
+      "stylam"
+    ]
+  },
+  "TCS": {
+    "name": "Tata Consultancy Services",
+    "ticker": "TCS.NS",
+    "keywords": [
+      "tcs",
+      "tata consultancy"
+    ]
+  },
+  "TMPV": {
+    "name": "Tata Motors PV",
+    "ticker": "TMPV.NS",
+    "keywords": [
+      "tata motors"
+    ]
+  },
+  "TMCV": {
+    "name": "Tata Motors CV",
+    "ticker": "TMCV.NS",
+    "keywords": [
+      "tata motors"
+    ]
+  },
+  "TRIVENI": {
+    "name": "Triveni Engineering",
+    "ticker": "TRIVENI.NS",
+    "keywords": [
+      "triveni engineering",
+      "triveni engg"
+    ]
+  },
+  "VBL": {
+    "name": "Varun Beverages",
+    "ticker": "VBL.NS",
+    "keywords": [
+      "varun beverages",
+      "vbl"
+    ]
+  },
+  "ZENTEC": {
+    "name": "Zen Technologies",
+    "ticker": "ZENTEC.NS",
+    "keywords": [
+      "zen technologies",
+      "zen tech",
+      "zentec"
+    ]
+  }
 }
