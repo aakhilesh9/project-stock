@@ -275,5 +275,14 @@
       "zen tech",
       "zentec"
     ]
+  },
+  "KIRLPNU.NS": {
+    "name": "Kirloskar Pneumatics",
+    "ticker": "KIRLPNU.NS",
+    "keywords": [
+      "kirlpnu",
+      "kirloskar pneumatics"
+    ],
+    "user_added": true
   }
 }
